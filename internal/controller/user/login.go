@@ -10,16 +10,16 @@ import (
 	"net/http"
 )
 
-func (container *Container) Register(writer http.ResponseWriter, request *http.Request) {
+func (container *Container) Login(writer http.ResponseWriter, request *http.Request) {
 	registerRequest, ok := controller.DecodeAndValidateJSONRequest[requests.Auth](request, writer)
 	if !ok {
 		return
 	}
 
-	token, err := container.manager.RegisterUser(registerRequest.Login, registerRequest.Password)
+	token, err := container.manager.AuthUser(registerRequest.Login, registerRequest.Password)
 	if err != nil {
-		if errors.Is(err, manager.ErrLoginAlreadyExists) {
-			controller.WriteJSONErrorResponse(http.StatusConflict, writer, "login already exists", err)
+		if errors.Is(err, manager.ErrInvalidCredentials) {
+			controller.WriteJSONErrorResponse(http.StatusUnauthorized, writer, "invalid credentials", err)
 		} else {
 			controller.WriteJSONErrorResponse(http.StatusInternalServerError, writer, "internal server error", err)
 		}

@@ -16,6 +16,6 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	}
 }
 
-func (repository *UserRepository) FindOneByEmail(email string) (*entity.User, error) {
-	return repository.FindOneByField("email", email)
+func (repository *UserRepository) FindOneByLogin(login string) (*entity.User, error) {
+	return repository.FindOneByField("login", login)
 }
