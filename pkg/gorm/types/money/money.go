@@ -31,7 +31,7 @@ func (Amount) GormDataType() string {
 	return "uint"
 }
 
-func (amount *Amount) Scan(value interface{}) error {
+func (amount *Amount) Scan(value any) error {
 	count, ok := value.(int64) // Go sql doesnt support uint
 	if !ok {
 		return ErrUnsupportedDbValue{Value: value}

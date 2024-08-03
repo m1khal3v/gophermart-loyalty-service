@@ -6,7 +6,8 @@ CREATE TABLE "users" (
   "password" bytea NOT NULL,
   "balance" bigint NOT NULL DEFAULT 0,
   "withdrawn" bigint NOT NULL DEFAULT 0,
-  "created_at" timestamptz NULL,
+  "created_at" timestamptz NOT NULL,
+  "updated_at" timestamptz NOT NULL,
   PRIMARY KEY ("id")
 );
 -- create index "idx_login" to table: "users"

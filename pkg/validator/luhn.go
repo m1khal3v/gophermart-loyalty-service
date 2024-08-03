@@ -24,15 +24,41 @@ func IsLuhn(value any) bool {
 
 func toUint64(value any) (uint64, bool) {
 	switch typed := value.(type) {
+	case uint:
+		return uint64(typed), true
+	case uint8:
+		return uint64(typed), true
+	case uint16:
+		return uint64(typed), true
+	case uint32:
+		return uint64(typed), true
 	case uint64:
 		return typed, true
-	case uint8, uint16, uint32, uint, int8, int16, int32, int64, int:
-		converted, ok := typed.(uint64)
-		if !ok {
+	case int:
+		if typed < 0 {
 			return 0, false
 		}
-
-		return converted, true
+		return uint64(typed), true
+	case int8:
+		if typed < 0 {
+			return 0, false
+		}
+		return uint64(typed), true
+	case int16:
+		if typed < 0 {
+			return 0, false
+		}
+		return uint64(typed), true
+	case int32:
+		if typed < 0 {
+			return 0, false
+		}
+		return uint64(typed), true
+	case int64:
+		if typed < 0 {
+			return 0, false
+		}
+		return uint64(typed), true
 	case string:
 		converted, err := strconv.ParseUint(typed, 10, 64)
 		if err != nil {

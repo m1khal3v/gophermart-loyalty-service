@@ -14,5 +14,6 @@ type User struct {
 	Balance   money.Amount `gorm:"not null;default:0"`
 	Withdrawn money.Amount `gorm:"not null;default:0"`
 
-	CreatedAt time.Time
+	CreatedAt time.Time `gorm:"not null;autoCreateTime"`
+	UpdatedAt time.Time `gorm:"not null;autoUpdateTime"`
 }
