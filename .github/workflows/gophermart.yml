@@ -30,6 +30,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Setup Goose
+        uses: mscno/setup-goose@v1
+
+      - name: Migrate DB
+        env:
+          GOOSE_DRIVER: postgres
+          GOOSE_DBSTRING: "host=postgres user=postgres password=postgres dbname=praktikum sslmode=disable"
+          GOOSE_MIGRATION_DIR: "./migrations/pgsql"
+        run: goose up
+
       - name: Download autotests binaries
         uses: robinraju/release-downloader@v1.8
         with:
