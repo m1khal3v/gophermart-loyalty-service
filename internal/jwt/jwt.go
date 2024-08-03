@@ -13,11 +13,11 @@ var ErrInvalidClaims = errors.New("invalid claims")
 type Claims struct {
 	jwt.RegisteredClaims
 
-	SubjectId uint32 `json:"sub_id"`
+	SubjectID uint32 `json:"sub_id"`
 }
 
-func (claims Claims) GetSubjectId() uint32 {
-	return claims.SubjectId
+func (claims Claims) GetSubjectID() uint32 {
+	return claims.SubjectID
 }
 
 type Container struct {
@@ -30,10 +30,10 @@ func New(secret string) *Container {
 	}
 }
 
-func (container *Container) Encode(subjectId uint32, subject string) (string, error) {
+func (container *Container) Encode(subjectID uint32, subject string) (string, error) {
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, Claims{
-		SubjectId: subjectId,
+		SubjectID: subjectID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   subject,
 			IssuedAt:  jwt.NewNumericDate(now),

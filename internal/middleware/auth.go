@@ -18,7 +18,7 @@ func ValidateAuthorizationToken(jwt *jwt.Container) func(next http.Handler) http
 				return
 			}
 
-			request = request.WithContext(context.WithUserId(request.Context(), claims.SubjectId))
+			request = request.WithContext(context.WithUserID(request.Context(), claims.SubjectID))
 
 			next.ServeHTTP(writer, request)
 		})

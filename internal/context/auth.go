@@ -2,19 +2,21 @@ package context
 
 import "context"
 
-const userIDKey = "userID"
+type key string
 
-func WithUserId(ctx context.Context, id uint32) context.Context {
+const userIDKey key = "userID"
+
+func WithUserID(ctx context.Context, id uint32) context.Context {
 	return context.WithValue(ctx, userIDKey, id)
 }
 
-func UserIdFromContext(ctx context.Context) (uint32, bool) {
+func UserIDFromContext(ctx context.Context) (uint32, bool) {
 	value := ctx.Value(userIDKey)
 	if value == nil {
 		return 0, false
 	}
 
-	userId, ok := value.(uint32)
+	userID, ok := value.(uint32)
 
-	return userId, ok
+	return userID, ok
 }

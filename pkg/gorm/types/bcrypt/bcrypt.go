@@ -10,11 +10,11 @@ import (
 // See IETF article https://www.ietf.org/archive/id/draft-ietf-kitten-password-storage-07.html#name-bcrypt
 const RecommendedCost = 14
 
-type ErrUnsupportedDbValue struct {
+type ErrUnsupportedDBValue struct {
 	Value any
 }
 
-func (err ErrUnsupportedDbValue) Error() string {
+func (err ErrUnsupportedDBValue) Error() string {
 	return fmt.Sprintf("unsupported db value: %v", err.Value)
 }
 
@@ -31,7 +31,7 @@ func (Hash) GormDataType() string {
 func (hash *Hash) Scan(value interface{}) error {
 	bytes, ok := value.([]byte)
 	if !ok {
-		return ErrUnsupportedDbValue{Value: value}
+		return ErrUnsupportedDBValue{Value: value}
 	}
 
 	*hash = bytes

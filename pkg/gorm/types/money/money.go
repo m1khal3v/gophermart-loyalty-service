@@ -13,11 +13,11 @@ const precision = 2
 
 var factor = math.Pow10(precision)
 
-type ErrUnsupportedDbValue struct {
+type ErrUnsupportedDBValue struct {
 	Value any
 }
 
-func (err ErrUnsupportedDbValue) Error() string {
+func (err ErrUnsupportedDBValue) Error() string {
 	return fmt.Sprintf("unsupported db value: %v", err.Value)
 }
 
@@ -34,7 +34,7 @@ func (Amount) GormDataType() string {
 func (amount *Amount) Scan(value any) error {
 	count, ok := value.(int64) // Go sql doesnt support uint
 	if !ok {
-		return ErrUnsupportedDbValue{Value: value}
+		return ErrUnsupportedDBValue{Value: value}
 	}
 
 	*amount = Amount(count)
