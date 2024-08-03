@@ -30,7 +30,7 @@ func New(secret string) *Container {
 	}
 }
 
-func (container *Container) Create(subjectId uint32, subject string) (string, error) {
+func (container *Container) Encode(subjectId uint32, subject string) (string, error) {
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, Claims{
 		SubjectId: subjectId,
@@ -44,7 +44,7 @@ func (container *Container) Create(subjectId uint32, subject string) (string, er
 	return token.SignedString(container.secret)
 }
 
-func (container *Container) Parse(token string) (*Claims, error) {
+func (container *Container) Decode(token string) (*Claims, error) {
 	parsed, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return container.secret, nil
 	}, jwt.WithExpirationRequired(), jwt.WithIssuedAt(), jwt.WithValidMethods([]string{"HS512"}))

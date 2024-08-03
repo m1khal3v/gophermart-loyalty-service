@@ -14,10 +14,10 @@ var ErrInvalidCredentials = errors.New("invalid credentials")
 
 type UserManager struct {
 	userRepository *repository.UserRepository
-	jwt            jwt.Container
+	jwt            *jwt.Container
 }
 
-func NewUserManager(userRepository *repository.UserRepository, jwt jwt.Container) *UserManager {
+func NewUserManager(userRepository *repository.UserRepository, jwt *jwt.Container) *UserManager {
 	return &UserManager{
 		userRepository: userRepository,
 		jwt:            jwt,
@@ -43,7 +43,7 @@ func (manager *UserManager) RegisterUser(login, password string) (string, error)
 		return "", err
 	}
 
-	token, err := manager.jwt.Create(user.ID, user.Login)
+	token, err := manager.jwt.Encode(user.ID, user.Login)
 	if err != nil {
 		return "", err
 	}
@@ -64,7 +64,7 @@ func (manager *UserManager) AuthUser(login, password string) (string, error) {
 		return "", ErrInvalidCredentials
 	}
 
-	token, err := manager.jwt.Create(user.ID, user.Login)
+	token, err := manager.jwt.Encode(user.ID, user.Login)
 	if err != nil {
 		return "", err
 	}
