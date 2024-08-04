@@ -14,7 +14,9 @@ type User struct {
 
 	Balance   money.Amount `gorm:"not null;default:0"`
 	Withdrawn money.Amount `gorm:"not null;default:0"`
-	Orders    []Order      `gorm:"foreignKey:UserID"`
+
+	Orders      []Order      `gorm:"foreignKey:UserID"`
+	Withdrawals []Withdrawal `gorm:"foreignKey:UserID"`
 
 	CreatedAt time.Time `gorm:"not null;autoCreateTime"`
 	UpdatedAt time.Time `gorm:"not null;autoUpdateTime"`

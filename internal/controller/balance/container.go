@@ -7,11 +7,20 @@ import (
 )
 
 type Container struct {
-	manager *manager.UserManager
+	userManager           *manager.UserManager
+	withdrawalManager     *manager.WithdrawalManager
+	userWithdrawalManager *manager.UserWithdrawalManager
 }
 
-func NewContainer(repository *repository.UserRepository, jwt *jwt.Container) *Container {
+func NewContainer(
+	userRepository *repository.UserRepository,
+	jwt *jwt.Container,
+	withdrawalRepository *repository.WithdrawalRepository,
+	userWithdrawalRepository *repository.UserWithdrawalRepository,
+) *Container {
 	return &Container{
-		manager: manager.NewUserManager(repository, jwt),
+		userManager:           manager.NewUserManager(userRepository, jwt),
+		withdrawalManager:     manager.NewWithdrawalManager(withdrawalRepository),
+		userWithdrawalManager: manager.NewUserWithdrawalManager(userWithdrawalRepository),
 	}
 }

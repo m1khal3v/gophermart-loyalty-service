@@ -9,6 +9,9 @@ func init() {
 	govalidator.CustomTypeTagMap.Set("luhn", func(value any, context any) bool {
 		return IsLuhn(value)
 	})
+	govalidator.CustomTypeTagMap.Set("positive", func(value any, context any) bool {
+		return IsPositive(value)
+	})
 }
 
 func IsLuhn(value any) bool {
@@ -20,6 +23,40 @@ func IsLuhn(value any) bool {
 	number, controlDigit := converted/10, converted%10
 
 	return (controlDigit+luhnChecksum(number))%10 == 0
+}
+
+func IsPositive(value any) bool {
+	switch typed := value.(type) {
+	case uint:
+		return typed > 0
+	case int:
+		return typed > 0
+	case uint8:
+		return typed > 0
+	case uint16:
+		return typed > 0
+	case uint32:
+		return typed > 0
+	case uint64:
+		return typed > 0
+	case int8:
+		return typed > 0
+	case int16:
+		return typed > 0
+	case int32:
+		return typed > 0
+	case int64:
+		return typed > 0
+	case string:
+		float, err := strconv.ParseFloat(typed, 64)
+		if err != nil {
+			return false
+		}
+
+		return float > 0
+	default:
+		return false
+	}
 }
 
 func toUint64(value any) (uint64, bool) {

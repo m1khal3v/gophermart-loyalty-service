@@ -8,6 +8,7 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/auth"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/balance"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/order"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/withdrawal"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
 	internalMiddleware "github.com/m1khal3v/gophermart-loyalty-service/internal/middleware"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
@@ -17,9 +18,11 @@ import (
 
 func New(db *gorm.DB, jwt *jwt.Container) chi.Router {
 	userRepository := repository.NewUserRepository(db)
+	withdrawalRepository := repository.NewWithdrawalRepository(db)
 	authRoutes := auth.NewContainer(userRepository, jwt)
 	orderRoutes := order.NewContainer(repository.NewOrderRepository(db))
-	balanceRoutes := balance.NewContainer(userRepository, jwt)
+	balanceRoutes := balance.NewContainer(userRepository, jwt, withdrawalRepository)
+	withdrawalRoutes := withdrawal.NewContainer(withdrawalRepository)
 
 	router := chi.NewRouter()
 	router.Use(middleware.RealIP)
@@ -47,6 +50,7 @@ func New(db *gorm.DB, jwt *jwt.Container) chi.Router {
 				router.Route("/balance", func(router chi.Router) {
 					router.Get("/", balanceRoutes.Balance)
 				})
+				router.Get("/withdrawals", withdrawalRoutes.List)
 			})
 		})
 	})

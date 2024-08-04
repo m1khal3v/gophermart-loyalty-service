@@ -14,7 +14,7 @@ func (container *Container) Balance(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
-	user, err := container.manager.FindByID(request.Context(), userID)
+	user, err := container.userManager.FindByID(request.Context(), userID)
 	if err != nil {
 		controller.WriteJSONErrorResponse(http.StatusInternalServerError, writer, "can`t get user", err)
 		return
