@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/httprate"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/auth"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/balance"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/order"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
 	internalMiddleware "github.com/m1khal3v/gophermart-loyalty-service/internal/middleware"
@@ -15,8 +16,10 @@ import (
 )
 
 func New(db *gorm.DB, jwt *jwt.Container) chi.Router {
-	authRoutes := auth.NewContainer(repository.NewUserRepository(db), jwt)
+	userRepository := repository.NewUserRepository(db)
+	authRoutes := auth.NewContainer(userRepository, jwt)
 	orderRoutes := order.NewContainer(repository.NewOrderRepository(db))
+	balanceRoutes := balance.NewContainer(userRepository, jwt)
 
 	router := chi.NewRouter()
 	router.Use(middleware.RealIP)
@@ -41,6 +44,9 @@ func New(db *gorm.DB, jwt *jwt.Container) chi.Router {
 
 				router.Post("/orders", orderRoutes.Register)
 				router.Get("/orders", orderRoutes.List)
+				router.Route("/balance", func(router chi.Router) {
+					router.Get("/", balanceRoutes.Balance)
+				})
 			})
 		})
 	})

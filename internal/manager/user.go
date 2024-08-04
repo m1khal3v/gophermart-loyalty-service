@@ -72,3 +72,7 @@ func (manager *UserManager) Authorize(ctx context.Context, login, password strin
 
 	return token, nil
 }
+
+func (manager *UserManager) FindByID(ctx context.Context, id uint32) (*entity.User, error) {
+	return manager.userRepository.FindOneByID(ctx, id)
+}
