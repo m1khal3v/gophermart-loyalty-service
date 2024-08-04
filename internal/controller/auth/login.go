@@ -16,7 +16,7 @@ func (container *Container) Login(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	token, err := container.manager.AuthUser(registerRequest.Login, registerRequest.Password)
+	token, err := container.manager.Authorize(request.Context(), registerRequest.Login, registerRequest.Password)
 	if err != nil {
 		if errors.Is(err, manager.ErrInvalidCredentials) {
 			controller.WriteJSONErrorResponse(http.StatusUnauthorized, writer, "invalid credentials", err)
@@ -28,7 +28,7 @@ func (container *Container) Login(writer http.ResponseWriter, request *http.Requ
 	}
 
 	writer.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token)) // for autotests
-	controller.WriteJSONResponse(responses.Auth{
+	controller.WriteJSONResponse(http.StatusOK, responses.Auth{
 		AccessToken: token,
 	}, writer)
 }

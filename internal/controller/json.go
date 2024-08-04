@@ -11,6 +11,10 @@ import (
 )
 
 func DecodeAndValidateJSONRequest[T any](request *http.Request, writer http.ResponseWriter) (*T, bool) {
+	if request.Header.Get("Content-Type") != "application/json" {
+		WriteJSONErrorResponse(http.StatusBadRequest, writer, "Invalid Content-Type", nil)
+	}
+
 	target := new(T)
 
 	if err := json.NewDecoder(request.Body).Decode(target); err != nil {
@@ -27,6 +31,10 @@ func DecodeAndValidateJSONRequest[T any](request *http.Request, writer http.Resp
 }
 
 func DecodeAndValidateJSONRequests[T any](request *http.Request, writer http.ResponseWriter) ([]*T, bool) {
+	if request.Header.Get("Content-Type") != "application/json" {
+		WriteJSONErrorResponse(http.StatusBadRequest, writer, "Invalid Content-Type", nil)
+	}
+
 	targets := make([]*T, 0)
 
 	if err := json.NewDecoder(request.Body).Decode(&targets); err != nil {
@@ -55,7 +63,7 @@ func DecodeAndValidateJSONRequests[T any](request *http.Request, writer http.Res
 	return targets, true
 }
 
-func WriteJSONResponse(response any, writer http.ResponseWriter) {
+func WriteJSONResponse(status int, response any, writer http.ResponseWriter) {
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
 		WriteJSONErrorResponse(http.StatusInternalServerError, writer, "Can`t encode response", err)
@@ -63,10 +71,45 @@ func WriteJSONResponse(response any, writer http.ResponseWriter) {
 	}
 
 	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(status)
 	if _, err = writer.Write(jsonResponse); err != nil {
 		WriteJSONErrorResponse(http.StatusInternalServerError, writer, "Can`t write response", err)
 		return
 	}
+}
+
+func StreamJSONResponse[T any](status int, stream <-chan T, transform func(item T) any, writer http.ResponseWriter) error {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(status)
+	if _, err := writer.Write([]byte("[")); err != nil {
+		return err
+	}
+
+	first := true
+	for item := range stream {
+		if first {
+			first = false
+		} else {
+			if _, err := writer.Write([]byte(",")); err != nil {
+				return err
+			}
+		}
+
+		jsonItem, err := json.Marshal(transform(item))
+		if err != nil {
+			return err
+		}
+
+		if _, err = writer.Write(jsonItem); err != nil {
+			return err
+		}
+	}
+
+	if _, err := writer.Write([]byte("]")); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func WriteJSONErrorResponse(status int, writer http.ResponseWriter, message string, responseError error) {

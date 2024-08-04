@@ -14,7 +14,7 @@ func ValidateAuthorizationToken(jwt *jwt.Container) func(next http.Handler) http
 			token := strings.TrimPrefix(request.Header.Get("Authorization"), "Bearer ")
 			claims, err := jwt.Decode(token)
 			if err != nil {
-				controller.WriteJSONErrorResponse(http.StatusUnauthorized, writer, "invalid credentials", err)
+				controller.WriteJSONErrorResponse(http.StatusUnauthorized, writer, "invalid token", err)
 				return
 			}
 

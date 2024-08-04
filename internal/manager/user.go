@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"context"
 	"errors"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
@@ -24,7 +25,7 @@ func NewUserManager(userRepository *repository.UserRepository, jwt *jwt.Containe
 	}
 }
 
-func (manager *UserManager) RegisterUser(login, password string) (string, error) {
+func (manager *UserManager) Register(ctx context.Context, login, password string) (string, error) {
 	hash, err := bcrypt.NewHash(password, bcrypt.RecommendedCost)
 	if err != nil {
 		return "", err
@@ -35,7 +36,7 @@ func (manager *UserManager) RegisterUser(login, password string) (string, error)
 		Password: hash,
 	}
 
-	if err := manager.userRepository.Create(user); err != nil {
+	if err := manager.userRepository.Create(ctx, user); err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			return "", ErrLoginAlreadyExists
 		}
@@ -51,8 +52,8 @@ func (manager *UserManager) RegisterUser(login, password string) (string, error)
 	return token, nil
 }
 
-func (manager *UserManager) AuthUser(login, password string) (string, error) {
-	user, err := manager.userRepository.FindOneByLogin(login)
+func (manager *UserManager) Authorize(ctx context.Context, login, password string) (string, error) {
+	user, err := manager.userRepository.FindOneByLogin(ctx, login)
 	if err != nil {
 		return "", err
 	}

@@ -7,12 +7,14 @@ import (
 )
 
 type User struct {
-	ID       uint32      `gorm:"primaryKey;autoIncrement'"`
-	Login    string      `gorm:"not null;uniqueIndex:idx_login"`
+	ID uint32 `gorm:"primaryKey;autoIncrement"`
+
+	Login    string      `gorm:"not null;size:32;uniqueIndex:idx_login"`
 	Password bcrypt.Hash `gorm:"not null"`
 
 	Balance   money.Amount `gorm:"not null;default:0"`
 	Withdrawn money.Amount `gorm:"not null;default:0"`
+	Orders    []Order      `gorm:"foreignKey:UserID"`
 
 	CreatedAt time.Time `gorm:"not null;autoCreateTime"`
 	UpdatedAt time.Time `gorm:"not null;autoUpdateTime"`

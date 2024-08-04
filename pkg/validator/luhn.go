@@ -66,6 +66,13 @@ func toUint64(value any) (uint64, bool) {
 		}
 
 		return converted, true
+	case []byte:
+		converted, err := strconv.ParseUint(string(typed), 10, 64)
+		if err != nil {
+			return 0, false
+		}
+
+		return converted, true
 	default:
 		return 0, false
 	}

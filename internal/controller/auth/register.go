@@ -16,7 +16,7 @@ func (container *Container) Register(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	token, err := container.manager.RegisterUser(registerRequest.Login, registerRequest.Password)
+	token, err := container.manager.Register(request.Context(), registerRequest.Login, registerRequest.Password)
 	if err != nil {
 		if errors.Is(err, manager.ErrLoginAlreadyExists) {
 			controller.WriteJSONErrorResponse(http.StatusConflict, writer, "login already exists", err)
@@ -28,7 +28,7 @@ func (container *Container) Register(writer http.ResponseWriter, request *http.R
 	}
 
 	writer.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token)) // for autotests
-	controller.WriteJSONResponse(responses.Auth{
+	controller.WriteJSONResponse(http.StatusOK, responses.Auth{
 		AccessToken: token,
 	}, writer)
 }
