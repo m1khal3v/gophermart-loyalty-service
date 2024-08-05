@@ -45,6 +45,9 @@ func (repository *Repository[T]) FindBy(ctx context.Context, order, condition an
 	if err != nil {
 		return nil, err
 	}
+	if result.Err() != nil {
+		return nil, result.Err()
+	}
 	defer result.Close()
 
 	return generator.NewFromFunctionWithContext(ctx, func() (*T, bool) {
@@ -70,6 +73,10 @@ func (repository *Repository[T]) FindIDsBy(ctx context.Context, order, condition
 	if err != nil {
 		return nil, err
 	}
+	if result.Err() != nil {
+		return nil, result.Err()
+	}
+
 	defer result.Close()
 
 	return generator.NewFromFunctionWithContext(ctx, func() (uint64, bool) {
