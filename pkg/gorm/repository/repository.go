@@ -68,7 +68,7 @@ type ID struct {
 }
 
 func (repository *Repository[T]) FindIDsBy(ctx context.Context, order, condition any, args ...any) (<-chan uint64, error) {
-	result, err := repository.findModelBy(ctx, &ID{}, order, condition, args...)
+	result, err := repository.findModelBy(ctx, new(T), order, condition, args...)
 	if err != nil {
 		return nil, err
 	}
