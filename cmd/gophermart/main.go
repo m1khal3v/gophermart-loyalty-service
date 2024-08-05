@@ -24,7 +24,7 @@ func main() {
 
 	container, err := container.New(config)
 	if err != nil {
-		logger.Logger.Panic(err.Error())
+		logger.Logger.Fatal(err.Error())
 	}
 
 	processorCtx, processorCancel := context.WithCancel(context.Background())
@@ -35,7 +35,7 @@ func main() {
 	go func() {
 		defer processorCancel()
 		if err := server.Start(serverCtx, container.Server); err != nil {
-			logger.Logger.Panic(err.Error())
+			logger.Logger.Fatal(err.Error())
 		}
 	}()
 	go func() {
