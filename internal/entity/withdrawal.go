@@ -11,5 +11,5 @@ type Withdrawal struct {
 
 	Sum money.Amount `gorm:"not null"`
 
-	CreatedAt time.Time `gorm:"not null;autoCreateTime;index:idx_created_at,sort:desc"`
+	CreatedAt time.Time `gorm:"not null;autoCreateTime;index:idx_withdrawal_created_at,sort:desc"`
 }

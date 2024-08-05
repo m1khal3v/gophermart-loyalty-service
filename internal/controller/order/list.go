@@ -15,7 +15,7 @@ func (container *Container) List(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	has, err := container.manager.HasUser(request.Context(), userID)
+	has, err := container.orderManager.HasUser(request.Context(), userID)
 	if err != nil {
 		controller.WriteJSONErrorResponse(http.StatusInternalServerError, writer, "can`t check that user has orders", err)
 		return
@@ -27,7 +27,7 @@ func (container *Container) List(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	orders, err := container.manager.FindByUser(request.Context(), userID)
+	orders, err := container.orderManager.FindByUser(request.Context(), userID)
 	if err != nil {
 		controller.WriteJSONErrorResponse(http.StatusInternalServerError, writer, "can`t get user orders", err)
 		return

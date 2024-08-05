@@ -21,7 +21,7 @@ func NewOrderManager(orderRepository *repository.OrderRepository) *OrderManager 
 	}
 }
 
-func (manager *OrderManager) Register(ctx context.Context, id uint64, userID uint32) error {
+func (manager *OrderManager) Register(ctx context.Context, id uint64, userID uint32) (*entity.Order, error) {
 	order := &entity.Order{
 		ID:     id,
 		UserID: userID,
@@ -30,17 +30,17 @@ func (manager *OrderManager) Register(ctx context.Context, id uint64, userID uin
 
 	order, created, err := manager.orderRepository.CreateOrFind(ctx, order)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if created {
-		return nil
+		return order, nil
 	}
 
 	if order.UserID == userID {
-		return ErrOrderAlreadyRegisteredByCurrentUser
+		return order, ErrOrderAlreadyRegisteredByCurrentUser
 	}
 
-	return ErrOrderAlreadyRegisteredByAnotherUser
+	return order, ErrOrderAlreadyRegisteredByAnotherUser
 }
 
 func (manager *OrderManager) FindByUser(ctx context.Context, userID uint32) (<-chan *entity.Order, error) {
@@ -57,4 +57,8 @@ func (manager *OrderManager) HasUser(ctx context.Context, userID uint32) (bool, 
 	}
 
 	return true, nil
+}
+
+func (manager *OrderManager) Update(ctx context.Context, id uint64, status string, accrual float64) error {
+	return manager.orderRepository.UpdateByID(ctx, id, status, accrual)
 }

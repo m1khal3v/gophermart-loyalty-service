@@ -19,6 +19,6 @@ type Order struct {
 	Status  string       `gorm:"not null;size:16;default:'NEW'"`
 	Accrual money.Amount `gorm:"not null;default:0"`
 
-	CreatedAt time.Time `gorm:"not null;autoCreateTime;index:idx_created_at,sort:desc"`
+	CreatedAt time.Time `gorm:"not null;autoCreateTime;index:idx_order_created_at,sort:desc"`
 	UpdatedAt time.Time `gorm:"not null;autoUpdateTime"`
 }

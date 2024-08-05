@@ -1,16 +1,19 @@
 package order
 
 import (
+	accrualManager "github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/manager"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 )
 
 type Container struct {
-	manager *manager.OrderManager
+	orderManager   *manager.OrderManager
+	accrualManager *accrualManager.Manager
 }
 
 func NewContainer(repository *repository.OrderRepository) *Container {
 	return &Container{
-		manager: manager.NewOrderManager(repository),
+		orderManager:   manager.NewOrderManager(repository),
+		accrualManager: accrualManager.New(repository),
 	}
 }

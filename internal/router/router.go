@@ -10,8 +10,10 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/order"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/withdrawal"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
 	internalMiddleware "github.com/m1khal3v/gophermart-loyalty-service/internal/middleware"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
+	pkgMiddleware "github.com/m1khal3v/gophermart-loyalty-service/pkg/middleware"
 	"gorm.io/gorm"
 	"time"
 )
@@ -21,11 +23,16 @@ func New(db *gorm.DB, jwt *jwt.Container) chi.Router {
 	withdrawalRepository := repository.NewWithdrawalRepository(db)
 	authRoutes := auth.NewContainer(userRepository, jwt)
 	orderRoutes := order.NewContainer(repository.NewOrderRepository(db))
-	balanceRoutes := balance.NewContainer(userRepository, jwt, withdrawalRepository)
+	balanceRoutes := balance.NewContainer(userRepository, jwt, withdrawalRepository, repository.NewUserWithdrawalRepository(db))
 	withdrawalRoutes := withdrawal.NewContainer(withdrawalRepository)
 
 	router := chi.NewRouter()
+	router.Use(pkgMiddleware.ZapLogRequest(logger.Logger, "http-request"))
+	router.Use(internalMiddleware.Recover())
+	router.Use(pkgMiddleware.ZapLogPanic(logger.Logger, "http-panic"))
 	router.Use(middleware.RealIP)
+	router.Use(pkgMiddleware.Decompress())
+	router.Use(pkgMiddleware.Compress(5, "text/html", "application/json"))
 	router.Route("/api", func(router chi.Router) {
 		router.Route("/user", func(router chi.Router) {
 			// Anonymous
@@ -49,6 +56,7 @@ func New(db *gorm.DB, jwt *jwt.Container) chi.Router {
 				router.Get("/orders", orderRoutes.List)
 				router.Route("/balance", func(router chi.Router) {
 					router.Get("/", balanceRoutes.Balance)
+					router.Post("/withdraw", balanceRoutes.Withdraw)
 				})
 				router.Get("/withdrawals", withdrawalRoutes.List)
 			})

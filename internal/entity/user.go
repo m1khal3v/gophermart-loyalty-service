@@ -9,7 +9,7 @@ import (
 type User struct {
 	ID uint32 `gorm:"primaryKey;autoIncrement"`
 
-	Login    string      `gorm:"not null;size:32;uniqueIndex:idx_login"`
+	Login    string      `gorm:"not null;size:32;uniqueIndex:idx_user_login"`
 	Password bcrypt.Hash `gorm:"not null"`
 
 	Balance   money.Amount `gorm:"not null;default:0"`

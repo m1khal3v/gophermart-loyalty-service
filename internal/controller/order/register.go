@@ -40,7 +40,8 @@ func (container *Container) Register(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	if err := container.manager.Register(request.Context(), uintID, userID); err != nil {
+	order, err := container.orderManager.Register(request.Context(), uintID, userID)
+	if err != nil {
 		if errors.Is(err, manager.ErrOrderAlreadyRegisteredByCurrentUser) {
 			controller.WriteJSONResponse(http.StatusOK, responses.Message{
 				Message: "order already registered by current user",
@@ -56,6 +57,7 @@ func (container *Container) Register(writer http.ResponseWriter, request *http.R
 		return
 	}
 
+	container.accrualManager.RegisterUnprocessed(order.ID)
 	controller.WriteJSONResponse(http.StatusAccepted, responses.Message{
 		Message: "order has been successfully registered for processing",
 	}, writer)

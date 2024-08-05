@@ -21,11 +21,11 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 }
 
 func (repository *UserRepository) FindOneByLogin(ctx context.Context, login string) (*entity.User, error) {
-	return repository.FindOneByField(ctx, "login", login)
+	return repository.FindOneBy(ctx, "login = ?", login)
 }
 
 func (repository *UserRepository) FindOneByID(ctx context.Context, id uint32) (*entity.User, error) {
-	return repository.FindOneByField(ctx, "id", id)
+	return repository.FindOneBy(ctx, "id = ?", id)
 }
 
 func (repository *UserRepository) Withdraw(ctx context.Context, id uint32, sum float64) (bool, error) {

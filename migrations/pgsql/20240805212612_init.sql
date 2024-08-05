@@ -10,8 +10,8 @@ CREATE TABLE "users" (
   "updated_at" timestamptz NOT NULL,
   PRIMARY KEY ("id")
 );
--- create index "idx_login" to table: "users"
-CREATE UNIQUE INDEX "idx_login" ON "users" ("login");
+-- create index "idx_user_login" to table: "users"
+CREATE UNIQUE INDEX "idx_user_login" ON "users" ("login");
 -- create "orders" table
 CREATE TABLE "orders" (
   "id" bigint NOT NULL,
@@ -23,8 +23,8 @@ CREATE TABLE "orders" (
   PRIMARY KEY ("id"),
   CONSTRAINT "fk_users_orders" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
--- create index "idx_created_at" to table: "orders"
-CREATE INDEX "idx_created_at" ON "orders" ("created_at" DESC);
+-- create index "idx_order_created_at" to table: "orders"
+CREATE INDEX "idx_order_created_at" ON "orders" ("created_at" DESC);
 -- create "withdrawals" table
 CREATE TABLE "withdrawals" (
   "order_id" bigint NOT NULL,
@@ -34,15 +34,19 @@ CREATE TABLE "withdrawals" (
   PRIMARY KEY ("order_id"),
   CONSTRAINT "fk_users_withdrawals" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
+-- create index "idx_withdrawal_created_at" to table: "withdrawals"
+CREATE INDEX "idx_withdrawal_created_at" ON "withdrawals" ("created_at" DESC);
 
 -- +goose Down
+-- reverse: create index "idx_withdrawal_created_at" to table: "withdrawals"
+DROP INDEX "idx_withdrawal_created_at";
 -- reverse: create "withdrawals" table
 DROP TABLE "withdrawals";
--- reverse: create index "idx_created_at" to table: "orders"
-DROP INDEX "idx_created_at";
+-- reverse: create index "idx_order_created_at" to table: "orders"
+DROP INDEX "idx_order_created_at";
 -- reverse: create "orders" table
 DROP TABLE "orders";
--- reverse: create index "idx_login" to table: "users"
-DROP INDEX "idx_login";
+-- reverse: create index "idx_user_login" to table: "users"
+DROP INDEX "idx_user_login";
 -- reverse: create "users" table
 DROP TABLE "users";

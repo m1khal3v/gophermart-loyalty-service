@@ -18,9 +18,9 @@ func NewWithdrawalRepository(db *gorm.DB) *WithdrawalRepository {
 }
 
 func (repository *WithdrawalRepository) FindOneByUserID(ctx context.Context, userID uint32) (*entity.Withdrawal, error) {
-	return repository.FindOneByField(ctx, "user_id", userID)
+	return repository.FindOneBy(ctx, "user_id = ?", userID)
 }
 
 func (repository *WithdrawalRepository) FindByUserID(ctx context.Context, userID uint32) (<-chan *entity.Withdrawal, error) {
-	return repository.FindByField(ctx, "user_id", userID, "created_at DESC")
+	return repository.FindBy(ctx, "created_at DESC", "user_id = ?", userID)
 }
