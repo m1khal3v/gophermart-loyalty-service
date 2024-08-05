@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/client"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/manager"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/task"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/semaphore"
 	"go.uber.org/zap"
@@ -12,11 +12,11 @@ import (
 )
 
 type Retriever struct {
-	client  client.Client
-	manager manager.Manager
+	client  *client.Client
+	manager *task.Manager
 }
 
-func NewRetriever(client client.Client, manager manager.Manager) *Retriever {
+func NewRetriever(client *client.Client, manager *task.Manager) *Retriever {
 	return &Retriever{
 		client:  client,
 		manager: manager,

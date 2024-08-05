@@ -44,7 +44,7 @@ func (repository *OrderRepository) FindByUserID(ctx context.Context, userID uint
 	return repository.FindBy(ctx, "created_at DESC", "user_id = ?", userID)
 }
 
-func (repository *OrderRepository) FindUnprocessedIDs(ctx context.Context) (<-chan *repository.ID, error) {
+func (repository *OrderRepository) FindUnprocessedIDs(ctx context.Context) (<-chan uint64, error) {
 	return repository.FindIDsBy(ctx, "created_at ASC", "status IN (?,?)", entity.OrderStatusNew, entity.OrderStatusProcessing)
 }
 

@@ -65,24 +65,24 @@ type ID struct {
 	ID uint64
 }
 
-func (repository *Repository[T]) FindIDsBy(ctx context.Context, order, condition any, args ...any) (<-chan *ID, error) {
+func (repository *Repository[T]) FindIDsBy(ctx context.Context, order, condition any, args ...any) (<-chan uint64, error) {
 	result, err := repository.findModelBy(ctx, &ID{}, order, condition, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer result.Close()
 
-	return generator.NewFromFunctionWithContext(ctx, func() (*ID, bool) {
+	return generator.NewFromFunctionWithContext(ctx, func() (uint64, bool) {
 		if !result.Next() {
-			return nil, false
+			return 0, false
 		}
 
 		entity := &ID{}
 		if err := repository.db.ScanRows(result, entity); err != nil {
-			return nil, false
+			return 0, false
 		}
 
-		return entity, true
+		return entity.ID, true
 	}), nil
 }
 

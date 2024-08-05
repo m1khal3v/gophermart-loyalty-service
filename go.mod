@@ -5,14 +5,17 @@ go 1.22.5
 require (
 	ariga.io/atlas-provider-gorm v0.5.0
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
+	github.com/caarlos0/env/v6 v6.10.1
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/httprate v0.12.0
 	github.com/go-resty/resty/v2 v2.14.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.25.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
+	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.11
 )
 
@@ -36,7 +39,6 @@ require (
 	golang.org/x/text v0.16.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.5.1 // indirect
-	gorm.io/driver/postgres v1.5.2 // indirect
 	gorm.io/driver/sqlite v1.5.2 // indirect
 	gorm.io/driver/sqlserver v1.5.2 // indirect
 )

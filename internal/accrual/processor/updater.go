@@ -2,8 +2,8 @@ package processor
 
 import (
 	"context"
-	accrualManager "github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/manager"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/task"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
@@ -12,14 +12,14 @@ import (
 )
 
 type Updater struct {
-	accrualManager accrualManager.Manager
-	orderManager   manager.OrderManager
+	taskManager  *task.Manager
+	orderManager *manager.OrderManager
 }
 
-func NewUpdater(accrualManager accrualManager.Manager, orderManager manager.OrderManager) *Updater {
+func NewUpdater(taskManager *task.Manager, orderManager *manager.OrderManager) *Updater {
 	return &Updater{
-		accrualManager: accrualManager,
-		orderManager:   orderManager,
+		taskManager:  taskManager,
+		orderManager: orderManager,
 	}
 }
 
@@ -41,7 +41,7 @@ func (processor *Updater) Process(ctx context.Context, concurrency uint64) error
 }
 
 func (processor *Updater) processOne(ctx context.Context) error {
-	accrual, ok := processor.accrualManager.GetProcessed()
+	accrual, ok := processor.taskManager.GetProcessed()
 	if !ok {
 		return nil
 	}
@@ -52,12 +52,12 @@ func (processor *Updater) processOne(ctx context.Context) error {
 	}
 
 	if err := processor.orderManager.Update(ctx, accrual.OrderID, convertStatus(accrual.Status), sum); err != nil {
-		processor.accrualManager.RegisterProcessed(accrual)
+		processor.taskManager.RegisterProcessed(accrual)
 		return err
 	}
 
 	if accrual.Status == responses.AccrualStatusRegistered || accrual.Status == responses.AccrualStatusProcessing {
-		processor.accrualManager.RegisterUnprocessed(accrual.OrderID)
+		processor.taskManager.RegisterUnprocessed(accrual.OrderID)
 	}
 
 	return nil

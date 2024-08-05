@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/task"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/auth"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/balance"
@@ -11,20 +12,24 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/withdrawal"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
 	internalMiddleware "github.com/m1khal3v/gophermart-loyalty-service/internal/middleware"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 	pkgMiddleware "github.com/m1khal3v/gophermart-loyalty-service/pkg/middleware"
-	"gorm.io/gorm"
 	"time"
 )
 
-func New(db *gorm.DB, jwt *jwt.Container) chi.Router {
-	userRepository := repository.NewUserRepository(db)
-	withdrawalRepository := repository.NewWithdrawalRepository(db)
-	authRoutes := auth.NewContainer(userRepository, jwt)
-	orderRoutes := order.NewContainer(repository.NewOrderRepository(db))
-	balanceRoutes := balance.NewContainer(userRepository, jwt, withdrawalRepository, repository.NewUserWithdrawalRepository(db))
-	withdrawalRoutes := withdrawal.NewContainer(withdrawalRepository)
+func New(
+	userManager *manager.UserManager,
+	orderManager *manager.OrderManager,
+	taskManager *task.Manager,
+	withdrawalManager *manager.WithdrawalManager,
+	userWithdrawalManager *manager.UserWithdrawalManager,
+	jwt *jwt.Container,
+) chi.Router {
+	authRoutes := auth.NewContainer(userManager)
+	orderRoutes := order.NewContainer(orderManager, taskManager)
+	balanceRoutes := balance.NewContainer(userManager, withdrawalManager, userWithdrawalManager)
+	withdrawalRoutes := withdrawal.NewContainer(withdrawalManager)
 
 	router := chi.NewRouter()
 	router.Use(pkgMiddleware.ZapLogRequest(logger.Logger, "http-request"))

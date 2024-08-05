@@ -1,19 +1,18 @@
 package order
 
 import (
-	accrualManager "github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/manager"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/task"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 )
 
 type Container struct {
-	orderManager   *manager.OrderManager
-	accrualManager *accrualManager.Manager
+	orderManager *manager.OrderManager
+	taskManager  *task.Manager
 }
 
-func NewContainer(repository *repository.OrderRepository) *Container {
+func NewContainer(orderManager *manager.OrderManager, taskManager *task.Manager) *Container {
 	return &Container{
-		orderManager:   manager.NewOrderManager(repository),
-		accrualManager: accrualManager.New(repository),
+		orderManager: orderManager,
+		taskManager:  taskManager,
 	}
 }

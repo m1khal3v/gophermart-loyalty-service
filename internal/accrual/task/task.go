@@ -1,9 +1,7 @@
-package manager
+package task
 
 import (
-	"context"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
 )
 
@@ -12,21 +10,16 @@ type Manager struct {
 	processed   *queue.Queue[*responses.Accrual]
 }
 
-func New(repository *repository.OrderRepository) (*Manager, error) {
-	unprocessedIDs, err := repository.FindUnprocessedIDs(context.TODO())
-	if err != nil {
-		return nil, err
-	}
-
+func NewTaskManager(unprocessedIDs <-chan uint64) *Manager {
 	unprocessedQueue := queue.New[uint64](10000)
 	for id := range unprocessedIDs {
-		unprocessedQueue.Push(id.ID)
+		unprocessedQueue.Push(id)
 	}
 
 	return &Manager{
 		unprocessed: unprocessedQueue,
 		processed:   queue.New[*responses.Accrual](10000),
-	}, nil
+	}
 }
 
 func (manager *Manager) RegisterUnprocessed(id uint64) {

@@ -1,9 +1,7 @@
 package balance
 
 import (
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 )
 
 type Container struct {
@@ -13,14 +11,13 @@ type Container struct {
 }
 
 func NewContainer(
-	userRepository *repository.UserRepository,
-	jwt *jwt.Container,
-	withdrawalRepository *repository.WithdrawalRepository,
-	userWithdrawalRepository *repository.UserWithdrawalRepository,
+	userManager *manager.UserManager,
+	withdrawalManager *manager.WithdrawalManager,
+	userWithdrawalManager *manager.UserWithdrawalManager,
 ) *Container {
 	return &Container{
-		userManager:           manager.NewUserManager(userRepository, jwt),
-		withdrawalManager:     manager.NewWithdrawalManager(withdrawalRepository),
-		userWithdrawalManager: manager.NewUserWithdrawalManager(userWithdrawalRepository),
+		userManager:           userManager,
+		withdrawalManager:     withdrawalManager,
+		userWithdrawalManager: userWithdrawalManager,
 	}
 }
