@@ -59,6 +59,6 @@ func (manager *OrderManager) HasUser(ctx context.Context, userID uint32) (bool, 
 	return true, nil
 }
 
-func (manager *OrderManager) Update(ctx context.Context, id uint64, status string, accrual float64) error {
-	return manager.orderRepository.UpdateByID(ctx, id, status, accrual)
+func (manager *OrderManager) UpdateStatus(ctx context.Context, id uint64, status string) error {
+	return manager.orderRepository.UpdateStatus(ctx, id, status)
 }

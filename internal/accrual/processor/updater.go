@@ -2,6 +2,7 @@ package processor
 
 import (
 	"context"
+	"errors"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/task"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
@@ -16,6 +17,8 @@ type Updater struct {
 	orderManager     *manager.OrderManager
 	userOrderManager *manager.UserOrderManager
 }
+
+var ErrAccrualIsEmpty = errors.New("accrual is empty")
 
 func NewUpdater(taskManager *task.Manager, orderManager *manager.OrderManager, userOrderManager *manager.UserOrderManager) *Updater {
 	return &Updater{
@@ -48,28 +51,28 @@ func (processor *Updater) processOne(ctx context.Context) error {
 		return nil
 	}
 
-	sum := float64(0)
-	if accrual.Accrual != nil {
-		sum = *accrual.Accrual
-	}
-
 	switch accrual.Status {
 	case responses.AccrualStatusRegistered:
 		processor.taskManager.RegisterUnprocessed(accrual.OrderID) // not final status
 	case responses.AccrualStatusProcessing:
-		if err := processor.orderManager.Update(ctx, accrual.OrderID, entity.OrderStatusProcessing, sum); err != nil {
+		if err := processor.orderManager.UpdateStatus(ctx, accrual.OrderID, entity.OrderStatusProcessing); err != nil {
 			processor.taskManager.RegisterProcessed(accrual)
 			return err
 		}
 
 		processor.taskManager.RegisterUnprocessed(accrual.OrderID) // not final status
 	case responses.AccrualStatusInvalid:
-		if err := processor.orderManager.Update(ctx, accrual.OrderID, entity.OrderStatusInvalid, sum); err != nil {
+		if err := processor.orderManager.UpdateStatus(ctx, accrual.OrderID, entity.OrderStatusInvalid); err != nil {
 			processor.taskManager.RegisterProcessed(accrual)
 			return err
 		}
 	case responses.AccrualStatusProcessed:
-		if err := processor.userOrderManager.Accrue(ctx, accrual.OrderID, sum); err != nil {
+		if accrual.Accrual == nil {
+			processor.taskManager.RegisterUnprocessed(accrual.OrderID)
+			return ErrAccrualIsEmpty
+		}
+
+		if err := processor.userOrderManager.Accrue(ctx, accrual.OrderID, *accrual.Accrual); err != nil {
 			processor.taskManager.RegisterProcessed(accrual)
 			return err
 		}
