@@ -12,14 +12,16 @@ import (
 )
 
 type Updater struct {
-	taskManager  *task.Manager
-	orderManager *manager.OrderManager
+	taskManager      *task.Manager
+	orderManager     *manager.OrderManager
+	userOrderManager *manager.UserOrderManager
 }
 
-func NewUpdater(taskManager *task.Manager, orderManager *manager.OrderManager) *Updater {
+func NewUpdater(taskManager *task.Manager, orderManager *manager.OrderManager, userOrderManager *manager.UserOrderManager) *Updater {
 	return &Updater{
-		taskManager:  taskManager,
-		orderManager: orderManager,
+		taskManager:      taskManager,
+		orderManager:     orderManager,
+		userOrderManager: userOrderManager,
 	}
 }
 
@@ -51,22 +53,27 @@ func (processor *Updater) processOne(ctx context.Context) error {
 		sum = *accrual.Accrual
 	}
 
-	if err := processor.orderManager.Update(ctx, accrual.OrderID, convertStatus(accrual.Status), sum); err != nil {
-		processor.taskManager.RegisterProcessed(accrual)
-		return err
-	}
+	switch accrual.Status {
+	case responses.AccrualStatusRegistered:
+		processor.taskManager.RegisterUnprocessed(accrual.OrderID) // not final status
+	case responses.AccrualStatusProcessing:
+		if err := processor.orderManager.Update(ctx, accrual.OrderID, entity.OrderStatusProcessing, sum); err != nil {
+			processor.taskManager.RegisterProcessed(accrual)
+			return err
+		}
 
-	if accrual.Status == responses.AccrualStatusRegistered || accrual.Status == responses.AccrualStatusProcessing {
-		processor.taskManager.RegisterUnprocessed(accrual.OrderID)
+		processor.taskManager.RegisterUnprocessed(accrual.OrderID) // not final status
+	case responses.AccrualStatusInvalid:
+		if err := processor.orderManager.Update(ctx, accrual.OrderID, entity.OrderStatusInvalid, sum); err != nil {
+			processor.taskManager.RegisterProcessed(accrual)
+			return err
+		}
+	case responses.AccrualStatusProcessed:
+		if err := processor.userOrderManager.Accrue(ctx, accrual.OrderID, sum); err != nil {
+			processor.taskManager.RegisterProcessed(accrual)
+			return err
+		}
 	}
 
 	return nil
-}
-
-func convertStatus(accrualStatus string) string {
-	if accrualStatus == responses.AccrualStatusRegistered {
-		return entity.OrderStatusNew
-	}
-
-	return accrualStatus
 }

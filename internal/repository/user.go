@@ -39,5 +39,18 @@ func (repository *UserRepository) Withdraw(ctx context.Context, id uint32, sum f
 		return false, result.Error
 	}
 
-	return result.RowsAffected > 0, nil
+	return result.RowsAffected == 1, nil
+}
+
+func (repository *UserRepository) Accrue(ctx context.Context, id uint32, sum float64) (bool, error) {
+	uintSum := uint64(money.New(sum))
+	result := repository.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"balance": gorm.Expr("balance + ?", uintSum),
+	})
+
+	if result.Error != nil {
+		return false, result.Error
+	}
+
+	return result.RowsAffected == 1, nil
 }

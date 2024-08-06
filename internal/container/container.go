@@ -52,6 +52,8 @@ func New(config *config.Config) (*Container, error) {
 	taskManager := task.NewTaskManager(unprocessedIDs)
 	userWithdrawalRepository := repository.NewUserWithdrawalRepository(gorm)
 	userWithdrawalManager := manager.NewUserWithdrawalManager(userWithdrawalRepository)
+	userOrderRepository := repository.NewUserOrderRepository(gorm)
+	userOrderManager := manager.NewUserOrderManager(userOrderRepository)
 	router := router.New(config.AppEnv, userManager, orderManager, taskManager, withdrawalManager, userWithdrawalManager, jwt)
 	server := &http.Server{
 		Addr:    config.RunAddress,
@@ -61,6 +63,6 @@ func New(config *config.Config) (*Container, error) {
 	return &Container{
 		Server:    server,
 		Retriever: processor.NewRetriever(client, taskManager),
-		Updater:   processor.NewUpdater(taskManager, orderManager),
+		Updater:   processor.NewUpdater(taskManager, orderManager, userOrderManager),
 	}, nil
 }
