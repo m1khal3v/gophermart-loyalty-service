@@ -49,8 +49,7 @@ func (repository *OrderRepository) FindUnprocessedIDs(ctx context.Context) (<-ch
 }
 
 func (repository *OrderRepository) UpdateByID(ctx context.Context, id uint64, status string, accrual float64) error {
-	return repository.UpdateOmitZero(ctx, &entity.Order{
-		ID:      id,
+	return repository.UpdateOmitZero(ctx, &entity.Order{ID: id}, &entity.Order{
 		Status:  status,
 		Accrual: money.New(accrual),
 	})

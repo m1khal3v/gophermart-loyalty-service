@@ -99,6 +99,6 @@ func (repository *Repository[T]) findModelBy(ctx context.Context, model, order, 
 		Rows()
 }
 
-func (repository *Repository[T]) UpdateOmitZero(ctx context.Context, entity *T) error {
-	return repository.db.WithContext(ctx).Model(new(T)).Updates(entity).Error
+func (repository *Repository[T]) UpdateOmitZero(ctx context.Context, model *T, update *T) error {
+	return repository.db.WithContext(ctx).Model(new(T)).Updates(update).Error
 }
