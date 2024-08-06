@@ -47,6 +47,10 @@ func IsPositive(value any) bool {
 		return typed > 0
 	case int64:
 		return typed > 0
+	case float32:
+		return typed > 0
+	case float64:
+		return typed > 0
 	case string:
 		float, err := strconv.ParseFloat(typed, 64)
 		if err != nil {
