@@ -52,4 +52,5 @@ func main() {
 	}()
 
 	<-processorCtx.Done()
+	<-serverCtx.Done()
 }
