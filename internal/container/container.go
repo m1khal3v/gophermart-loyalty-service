@@ -23,7 +23,9 @@ type Container struct {
 }
 
 func New(config *config.Config) (*Container, error) {
-	gorm, err := gorm.Open(postgres.Open(config.DatabaseURI), &gorm.Config{})
+	gorm, err := gorm.Open(postgres.Open(config.DatabaseURI), &gorm.Config{
+		TranslateError: true,
+	})
 	if err != nil {
 		return nil, err
 	}
