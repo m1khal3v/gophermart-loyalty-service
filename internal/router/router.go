@@ -19,6 +19,7 @@ import (
 )
 
 func New(
+	appEnv string,
 	userManager *manager.UserManager,
 	orderManager *manager.OrderManager,
 	taskManager *task.Manager,
@@ -42,12 +43,14 @@ func New(
 		router.Route("/user", func(router chi.Router) {
 			// Anonymous
 			router.Group(func(router chi.Router) {
-				router.Use(httprate.Limit(
-					1,
-					time.Second*3,
-					httprate.WithKeyByRealIP(),
-					httprate.WithLimitHandler(controller.RateLimited),
-				))
+				if appEnv == "prod" {
+					router.Use(httprate.Limit(
+						1,
+						time.Second*3,
+						httprate.WithKeyByRealIP(),
+						httprate.WithLimitHandler(controller.RateLimited),
+					))
+				}
 
 				router.Post("/register", authRoutes.Register)
 				router.Post("/login", authRoutes.Login)

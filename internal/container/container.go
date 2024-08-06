@@ -52,7 +52,7 @@ func New(config *config.Config) (*Container, error) {
 	taskManager := task.NewTaskManager(unprocessedIDs)
 	userWithdrawalRepository := repository.NewUserWithdrawalRepository(gorm)
 	userWithdrawalManager := manager.NewUserWithdrawalManager(userWithdrawalRepository)
-	router := router.New(userManager, orderManager, taskManager, withdrawalManager, userWithdrawalManager, jwt)
+	router := router.New(config.AppEnv, userManager, orderManager, taskManager, withdrawalManager, userWithdrawalManager, jwt)
 	server := &http.Server{
 		Addr:    config.RunAddress,
 		Handler: router,
