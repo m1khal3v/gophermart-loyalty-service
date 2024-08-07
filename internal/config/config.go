@@ -20,7 +20,7 @@ func ParseConfig() *Config {
 	config := &Config{}
 	flag.StringVarP(&config.AppEnv, "env", "e", "dev", "app environment")
 	flag.StringVarP(&config.AppSecret, "app-secret", "s", "aPp$eCr3t", "app secret for jwt")
-	flag.StringVarP(&config.RunAddress, "address", "a", "localhost:8080", "address of gophermart-loyalty-service server")
+	flag.StringVarP(&config.RunAddress, "address", "a", ":8080", "address of gophermart-loyalty-service server")
 	flag.StringVarP(&config.AccrualSystemAddress, "accrual-system-address", "r", "localhost:8081", "address of gophermart-accrual-service server")
 	flag.StringVarP(&config.DatabaseURI, "database-uri", "d", "", "database uri")
 	flag.Uint64VarP(&config.RetrieverConcurrency, "retriever-concurrency", "c", 10, "retriever concurrency")

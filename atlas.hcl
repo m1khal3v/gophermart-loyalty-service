@@ -12,7 +12,7 @@ data "external_schema" "gorm" {
 
 env "gorm" {
   src = data.external_schema.gorm.url
-  dev = "docker://postgres/16/dev?search_path=public"
+  dev = "postgres://postgres:postgres@pgsql:5432/postgres?search_path=public&sslmode=disable"
   migration {
     dir = "file://migrations/pgsql?format=goose"
   }
