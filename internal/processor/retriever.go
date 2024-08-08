@@ -19,7 +19,8 @@ type Retriever struct {
 	concurrency uint64
 }
 
-func NewRetriever(client *client.Client,
+func NewRetriever(
+	client *client.Client,
 	unprocessed *queue.Queue[uint64],
 	processed *queue.Queue[*responses.Accrual],
 	concurrency uint64,
