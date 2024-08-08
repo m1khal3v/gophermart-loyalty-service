@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/client"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/processor"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/task"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/config"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/auth"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/balance"
@@ -17,6 +17,7 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/router"
+	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -33,13 +34,52 @@ type App struct {
 	updater   *processor.Updater
 }
 
+// New function acts as the simplest configuration-based dependency injector
 func New(config *config.Config) (*App, error) {
+	// JWT
+	jwt := jwt.New(config.AppSecret)
+
+	// DB
 	gorm, err := gorm.Open(postgres.Open(config.DatabaseURI), &gorm.Config{
 		TranslateError: true,
 	})
 	if err != nil {
 		return nil, err
 	}
+	userRepository := repository.NewUserRepository(gorm)
+	withdrawalRepository := repository.NewWithdrawalRepository(gorm)
+	orderRepository := repository.NewOrderRepository(gorm)
+	userWithdrawalRepository := repository.NewUserWithdrawalRepository(gorm)
+	userOrderRepository := repository.NewUserOrderRepository(gorm)
+
+	// Managers
+	userManager := manager.NewUserManager(userRepository, jwt)
+	withdrawalManager := manager.NewWithdrawalManager(withdrawalRepository)
+	orderManager := manager.NewOrderManager(orderRepository)
+	userWithdrawalManager := manager.NewUserWithdrawalManager(userWithdrawalRepository)
+	userOrderManager := manager.NewUserOrderManager(userOrderRepository)
+
+	// Queue
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	unprocessedIDs, err := orderRepository.FindUnprocessedIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	unprocessedQueue := queue.New[uint64](10000)
+	for unprocessedID := range unprocessedIDs {
+		unprocessedQueue.Push(unprocessedID)
+	}
+	processedQueue := queue.New[*responses.Accrual](10000)
+
+	// Router
+	authRoutes := auth.NewContainer(userManager)
+	orderRoutes := order.NewContainer(orderManager, unprocessedQueue)
+	balanceRoutes := balance.NewContainer(userManager, withdrawalManager, userWithdrawalManager)
+	withdrawalRoutes := withdrawal.NewContainer(withdrawalManager)
+	router := router.New(config.AppEnv, authRoutes, orderRoutes, balanceRoutes, withdrawalRoutes, jwt)
+
+	// Accrual
 	client, err := client.New(&client.Config{
 		Address: config.AccrualSystemAddress,
 	})
@@ -47,37 +87,13 @@ func New(config *config.Config) (*App, error) {
 		return nil, err
 	}
 
-	jwt := jwt.New(config.AppSecret)
-	userRepository := repository.NewUserRepository(gorm)
-	userManager := manager.NewUserManager(userRepository, jwt)
-	withdrawalRepository := repository.NewWithdrawalRepository(gorm)
-	withdrawalManager := manager.NewWithdrawalManager(withdrawalRepository)
-	orderRepository := repository.NewOrderRepository(gorm)
-	orderManager := manager.NewOrderManager(orderRepository)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	unprocessedIDs, err := orderRepository.FindUnprocessedIDs(ctx)
-	if err != nil {
-		return nil, err
-	}
-	taskManager := task.NewTaskManager(unprocessedIDs)
-	userWithdrawalRepository := repository.NewUserWithdrawalRepository(gorm)
-	userWithdrawalManager := manager.NewUserWithdrawalManager(userWithdrawalRepository)
-	userOrderRepository := repository.NewUserOrderRepository(gorm)
-	userOrderManager := manager.NewUserOrderManager(userOrderRepository)
-	authRoutes := auth.NewContainer(userManager)
-	orderRoutes := order.NewContainer(orderManager, taskManager)
-	balanceRoutes := balance.NewContainer(userManager, withdrawalManager, userWithdrawalManager)
-	withdrawalRoutes := withdrawal.NewContainer(withdrawalManager)
-	router := router.New(config.AppEnv, authRoutes, orderRoutes, balanceRoutes, withdrawalRoutes, jwt)
-
 	return &App{
 		server: &http.Server{
 			Addr:    config.RunAddress,
 			Handler: router,
 		},
-		retriever: processor.NewRetriever(client, taskManager, config.RetrieverConcurrency),
-		updater:   processor.NewUpdater(taskManager, orderManager, userOrderManager, config.UpdaterConcurrency),
+		retriever: processor.NewRetriever(client, unprocessedQueue, processedQueue, config.RetrieverConcurrency),
+		updater:   processor.NewUpdater(unprocessedQueue, processedQueue, orderManager, userOrderManager, config.UpdaterConcurrency),
 	}, nil
 }
 
@@ -114,12 +130,11 @@ func (app *App) Run() {
 	case <-errCtx.Done():
 		suspendCancel()
 		logger.Logger.Error("An error occurred while the application was running", zap.Error(context.Cause(errCtx)))
-		app.shutdown()
 	case <-suspendCtx.Done():
 		logger.Logger.Info("Received suspend signal.")
-		app.shutdown()
 	}
 
+	app.shutdown()
 	logger.Logger.Info("Waiting for all goroutines to finish...")
 	wg.Wait()
 }

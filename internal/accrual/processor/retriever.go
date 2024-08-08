@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/client"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/task"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
+	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/semaphore"
 	"go.uber.org/zap"
 	"time"
@@ -13,14 +14,20 @@ import (
 
 type Retriever struct {
 	client      *client.Client
-	manager     *task.Manager
+	unprocessed *queue.Queue[uint64]
+	processed   *queue.Queue[*responses.Accrual]
 	concurrency uint64
 }
 
-func NewRetriever(client *client.Client, manager *task.Manager, concurrency uint64) *Retriever {
+func NewRetriever(client *client.Client,
+	unprocessed *queue.Queue[uint64],
+	processed *queue.Queue[*responses.Accrual],
+	concurrency uint64,
+) *Retriever {
 	return &Retriever{
 		client:      client,
-		manager:     manager,
+		unprocessed: unprocessed,
+		processed:   processed,
 		concurrency: concurrency,
 	}
 }
@@ -58,7 +65,7 @@ func (processor *Retriever) Process(ctx context.Context) error {
 }
 
 func (processor *Retriever) processOne(ctx context.Context) error {
-	orderID, ok := processor.manager.GetUnprocessed()
+	orderID, ok := processor.unprocessed.Pop()
 	if !ok {
 		return nil
 	}
@@ -68,7 +75,7 @@ func (processor *Retriever) processOne(ctx context.Context) error {
 		return err
 	}
 
-	processor.manager.RegisterProcessed(accrual)
+	processor.processed.Push(accrual)
 
 	return nil
 }

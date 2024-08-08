@@ -26,6 +26,6 @@ func main() {
 	if app, err := app.New(config); err == nil {
 		app.Run()
 	} else {
-		logger.Logger.Fatal("Can't start application", zap.Error(err))
+		logger.Logger.Fatal("Can't run application", zap.Error(err))
 	}
 }
