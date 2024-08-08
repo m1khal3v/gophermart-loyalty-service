@@ -16,20 +16,22 @@ type Updater struct {
 	taskManager      *task.Manager
 	orderManager     *manager.OrderManager
 	userOrderManager *manager.UserOrderManager
+	concurrency      uint64
 }
 
 var ErrAccrualIsEmpty = errors.New("accrual is empty")
 
-func NewUpdater(taskManager *task.Manager, orderManager *manager.OrderManager, userOrderManager *manager.UserOrderManager) *Updater {
+func NewUpdater(taskManager *task.Manager, orderManager *manager.OrderManager, userOrderManager *manager.UserOrderManager, concurrency uint64) *Updater {
 	return &Updater{
 		taskManager:      taskManager,
 		orderManager:     orderManager,
 		userOrderManager: userOrderManager,
+		concurrency:      concurrency,
 	}
 }
 
-func (processor *Updater) Process(ctx context.Context, concurrency uint64) error {
-	semaphore := semaphore.New(concurrency)
+func (processor *Updater) Process(ctx context.Context) error {
+	semaphore := semaphore.New(processor.concurrency)
 
 	for {
 		if err := semaphore.Acquire(ctx); err != nil {

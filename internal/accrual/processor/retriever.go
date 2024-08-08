@@ -12,19 +12,21 @@ import (
 )
 
 type Retriever struct {
-	client  *client.Client
-	manager *task.Manager
+	client      *client.Client
+	manager     *task.Manager
+	concurrency uint64
 }
 
-func NewRetriever(client *client.Client, manager *task.Manager) *Retriever {
+func NewRetriever(client *client.Client, manager *task.Manager, concurrency uint64) *Retriever {
 	return &Retriever{
-		client:  client,
-		manager: manager,
+		client:      client,
+		manager:     manager,
+		concurrency: concurrency,
 	}
 }
 
-func (processor *Retriever) Process(ctx context.Context, concurrency uint64) error {
-	semaphore := semaphore.New(concurrency)
+func (processor *Retriever) Process(ctx context.Context) error {
+	semaphore := semaphore.New(processor.concurrency)
 	retryAfterChannel := make(chan client.ErrTooManyRequests, 1)
 	defer close(retryAfterChannel)
 
