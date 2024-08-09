@@ -77,7 +77,7 @@ func New(config *config.Config) (*app, error) {
 	orderRoutes := order.NewContainer(orderManager, unprocessedQueue)
 	balanceRoutes := balance.NewContainer(userManager, withdrawalManager, userWithdrawalManager)
 	withdrawalRoutes := withdrawal.NewContainer(withdrawalManager)
-	router := router.New(config.AppEnv, authRoutes, orderRoutes, balanceRoutes, withdrawalRoutes, jwt)
+	router := router.New(config.AppEnv == "prod", authRoutes, orderRoutes, balanceRoutes, withdrawalRoutes, jwt)
 
 	// Accrual
 	client, err := client.New(&client.Config{

@@ -7,23 +7,30 @@ import (
 func Retry(
 	baseDelay,
 	maxDelay time.Duration,
-	attempts,
+	retries,
 	multiplier uint64,
 	function func() error,
 	filter func(err error) bool,
 ) error {
 	var err error
-	for i := uint64(0); i < attempts; i++ {
-		if err = function(); err != nil && (filter == nil || filter(err)) {
-			time.Sleep(calculateDelay(baseDelay, maxDelay, i, multiplier))
+	retry := uint64(0)
 
-			continue
+	for {
+		if retry > retries {
+			return err
 		}
 
-		return err
-	}
+		if err = function(); err == nil {
+			return nil
+		}
 
-	return err
+		if filter != nil && !filter(err) {
+			return err
+		}
+
+		time.Sleep(calculateDelay(baseDelay, maxDelay, retry, multiplier))
+		retry++
+	}
 }
 
 func pow(x, y uint64) uint64 {

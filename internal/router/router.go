@@ -17,7 +17,7 @@ import (
 )
 
 func New(
-	appEnv string,
+	enableRateLimitForAnonymous bool,
 	authRoutes *auth.Container,
 	orderRoutes *order.Container,
 	balanceRoutes *balance.Container,
@@ -35,7 +35,7 @@ func New(
 		router.Route("/user", func(router chi.Router) {
 			// Anonymous
 			router.Group(func(router chi.Router) {
-				if appEnv == "prod" {
+				if enableRateLimitForAnonymous {
 					router.Use(httprate.Limit(
 						1,
 						time.Second*3,
