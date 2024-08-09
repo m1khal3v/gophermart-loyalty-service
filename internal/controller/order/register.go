@@ -15,6 +15,7 @@ import (
 func (container *Container) Register(writer http.ResponseWriter, request *http.Request) {
 	if request.Header.Get("Content-Type") != "text/plain" {
 		controller.WriteJSONErrorResponse(http.StatusBadRequest, writer, "invalid Content-Type", nil)
+		return
 	}
 
 	userID, ok := context.UserIDFromContext(request.Context())

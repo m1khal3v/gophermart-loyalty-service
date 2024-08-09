@@ -32,34 +32,6 @@ type Client struct {
 	config *Config
 }
 
-type ErrUnexpectedStatus struct {
-	Status int
-}
-
-func (err ErrUnexpectedStatus) Error() string {
-	return fmt.Sprintf("unexpected status code: %d", err.Status)
-}
-
-func newErrUnexpectedStatus(status int) ErrUnexpectedStatus {
-	return ErrUnexpectedStatus{
-		Status: status,
-	}
-}
-
-type ErrInvalidAddress struct {
-	Address string
-}
-
-func (err ErrInvalidAddress) Error() string {
-	return fmt.Sprintf("invalid address: %s", err.Address)
-}
-
-func newErrInvalidAddress(address string) ErrInvalidAddress {
-	return ErrInvalidAddress{
-		Address: address,
-	}
-}
-
 func New(config *Config) (*Client, error) {
 	if err := prepareConfig(config); err != nil {
 		return nil, err
@@ -123,7 +95,7 @@ func (client *Client) createRequest(ctx context.Context) *resty.Request {
 }
 
 func (client *Client) doRequest(request *resty.Request, method, url string) (*resty.Response, error) {
-	var result *resty.Response = nil
+	var result *resty.Response
 	do := func() error {
 		var err error
 		result, err = request.Execute(method, url)

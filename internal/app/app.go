@@ -14,7 +14,7 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
-	processor2 "github.com/m1khal3v/gophermart-loyalty-service/internal/processor"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/processor"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/router"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
@@ -30,8 +30,8 @@ import (
 
 type app struct {
 	server    *http.Server
-	retriever *processor2.Retriever
-	updater   *processor2.Updater
+	retriever *processor.Retriever
+	updater   *processor.Updater
 }
 
 // New function acts as the simplest configuration-based dependency injector
@@ -92,8 +92,8 @@ func New(config *config.Config) (*app, error) {
 			Addr:    config.RunAddress,
 			Handler: router,
 		},
-		retriever: processor2.NewRetriever(client, unprocessedQueue, processedQueue, config.RetrieverConcurrency),
-		updater:   processor2.NewUpdater(unprocessedQueue, processedQueue, orderManager, userOrderManager, config.UpdaterConcurrency),
+		retriever: processor.NewRetriever(client, unprocessedQueue, processedQueue, config.RetrieverConcurrency),
+		updater:   processor.NewUpdater(unprocessedQueue, processedQueue, orderManager, userOrderManager, config.UpdaterConcurrency),
 	}, nil
 }
 

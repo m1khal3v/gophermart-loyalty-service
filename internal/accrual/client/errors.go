@@ -1,0 +1,52 @@
+package client
+
+import (
+	"errors"
+	"fmt"
+	"time"
+)
+
+type ErrUnexpectedStatus struct {
+	Status int
+}
+
+func (err ErrUnexpectedStatus) Error() string {
+	return fmt.Sprintf("unexpected status code: %d", err.Status)
+}
+
+func newErrUnexpectedStatus(status int) ErrUnexpectedStatus {
+	return ErrUnexpectedStatus{
+		Status: status,
+	}
+}
+
+type ErrInvalidAddress struct {
+	Address string
+}
+
+func (err ErrInvalidAddress) Error() string {
+	return fmt.Sprintf("invalid address: %s", err.Address)
+}
+
+func newErrInvalidAddress(address string) ErrInvalidAddress {
+	return ErrInvalidAddress{
+		Address: address,
+	}
+}
+
+type ErrTooManyRequests struct {
+	RetryAfterTime time.Time
+}
+
+func (err ErrTooManyRequests) Error() string {
+	return "too many requests"
+}
+
+func newErrTooManyRequests(retryAfter uint64) ErrTooManyRequests {
+	return ErrTooManyRequests{
+		RetryAfterTime: time.Now().Add(time.Duration(retryAfter) * time.Second),
+	}
+}
+
+var ErrOrderNotFound = errors.New("order not found")
+var ErrInternalServerError = errors.New("internal server error")

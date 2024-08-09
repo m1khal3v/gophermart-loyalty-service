@@ -13,23 +13,23 @@ import (
 )
 
 type Retriever struct {
-	client      *client.Client
-	unprocessed *queue.Queue[uint64]
-	processed   *queue.Queue[*responses.Accrual]
-	concurrency uint64
+	accrualClient *client.Client
+	unprocessed   *queue.Queue[uint64]
+	processed     *queue.Queue[*responses.Accrual]
+	concurrency   uint64
 }
 
 func NewRetriever(
-	client *client.Client,
+	accrualClient *client.Client,
 	unprocessed *queue.Queue[uint64],
 	processed *queue.Queue[*responses.Accrual],
 	concurrency uint64,
 ) *Retriever {
 	return &Retriever{
-		client:      client,
-		unprocessed: unprocessed,
-		processed:   processed,
-		concurrency: concurrency,
+		accrualClient: accrualClient,
+		unprocessed:   unprocessed,
+		processed:     processed,
+		concurrency:   concurrency,
 	}
 }
 
@@ -57,8 +57,9 @@ func (processor *Retriever) Process(ctx context.Context) error {
 			defer semaphore.Release()
 			if err := processor.processOne(ctx); err != nil {
 				logger.Logger.Warn("can`t retrieve accrual", zap.Error(err))
-				if errors.As(err, &client.ErrTooManyRequests{}) {
-					retryAfterChannel <- err.(client.ErrTooManyRequests)
+				target := client.ErrTooManyRequests{}
+				if errors.As(err, &target) {
+					retryAfterChannel <- target
 				}
 			}
 		}()
@@ -71,7 +72,7 @@ func (processor *Retriever) processOne(ctx context.Context) error {
 		return nil
 	}
 
-	accrual, err := processor.client.GetAccrual(ctx, orderID)
+	accrual, err := processor.accrualClient.GetAccrual(ctx, orderID)
 	if err != nil {
 		return err
 	}
