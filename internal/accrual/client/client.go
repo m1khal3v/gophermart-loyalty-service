@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
+	"github.com/m1khal3v/gophermart-loyalty-service/pkg/http/retryafter"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/retry"
 	"io"
 	"net/http"
@@ -126,12 +127,7 @@ func (client *Client) doRequest(request *resty.Request, method, url string) (*re
 		case http.StatusNoContent:
 			return ErrOrderNotFound
 		case http.StatusTooManyRequests:
-			retryAfter, err := strconv.ParseUint(result.Header().Get("Retry-After"), 10, 64)
-			if err != nil {
-				return err
-			}
-
-			return newErrTooManyRequests(retryAfter)
+			return newErrTooManyRequests(retryafter.Parse(result.Header().Get("Retry-After"), time.Second*10))
 		case http.StatusInternalServerError:
 			return ErrInternalServerError
 		default:

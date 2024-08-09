@@ -42,9 +42,9 @@ func (err ErrTooManyRequests) Error() string {
 	return "too many requests"
 }
 
-func newErrTooManyRequests(retryAfter uint64) ErrTooManyRequests {
+func newErrTooManyRequests(retryAfter time.Duration) ErrTooManyRequests {
 	return ErrTooManyRequests{
-		RetryAfterTime: time.Now().Add(time.Duration(retryAfter) * time.Second),
+		RetryAfterTime: time.Now().Add(retryAfter),
 	}
 }
 
