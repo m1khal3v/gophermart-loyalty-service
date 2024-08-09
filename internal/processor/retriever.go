@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/client"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
@@ -12,6 +13,9 @@ import (
 	"sync/atomic"
 	"time"
 )
+
+const NoTasksDelay = time.Second * 5
+const FailedTaskDelay = time.Second * 10
 
 type Retriever struct {
 	accrualClient *client.Client
@@ -49,10 +53,6 @@ func (processor *Retriever) Process(ctx context.Context) error {
 			defer semaphore.Release()
 			if err := processor.processOne(ctx); err != nil {
 				logger.Logger.Warn("can`t retrieve accrual", zap.Error(err))
-				target := client.ErrTooManyRequests{}
-				if errors.As(err, &target) {
-					processor.setRetryAfter(target.RetryAfterTime)
-				}
 			}
 		}()
 	}
@@ -61,12 +61,21 @@ func (processor *Retriever) Process(ctx context.Context) error {
 func (processor *Retriever) processOne(ctx context.Context) error {
 	orderID, ok := processor.unprocessed.Pop()
 	if !ok {
+		processor.setRetryAfter(time.Now().Add(NoTasksDelay))
 		return nil
 	}
 
 	accrual, err := processor.accrualClient.GetAccrual(ctx, orderID)
 	if err != nil {
-		return err
+		target := client.ErrTooManyRequests{}
+		if errors.As(err, &target) {
+			processor.setRetryAfter(target.RetryAfterTime)
+			processor.unprocessed.Push(orderID)
+		} else {
+			processor.unprocessed.PushDelayed(ctx, orderID, FailedTaskDelay)
+		}
+
+		return fmt.Errorf("accrual %d: %w", orderID, err)
 	}
 
 	processor.processed.Push(accrual)
@@ -94,6 +103,8 @@ func (processor *Retriever) processRetryAfterIfExists() {
 
 // Lock-free setRetryAfter
 func (processor *Retriever) setRetryAfter(retryAfter time.Time) {
+	retryAfter = retryAfter.Round(time.Second)
+
 	if retryAfter.Before(time.Now()) {
 		return
 	}
