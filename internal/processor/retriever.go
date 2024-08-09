@@ -22,7 +22,7 @@ type Retriever struct {
 	unprocessed   *queue.Queue[uint64]
 	processed     *queue.Queue[*responses.Accrual]
 	concurrency   uint64
-	retryAfter    atomic.Pointer[time.Time]
+	waitFor       atomic.Pointer[time.Time]
 }
 
 func NewRetriever(
@@ -47,29 +47,32 @@ func (processor *Retriever) Process(ctx context.Context) error {
 			return err
 		}
 
-		processor.processRetryAfterIfExists()
+		if err := processor.waitIfNeed(ctx); err != nil {
+			return err
+		}
 
-		go func() {
-			defer semaphore.Release()
-			if err := processor.processOne(ctx); err != nil {
-				logger.Logger.Warn("can`t retrieve accrual", zap.Error(err))
-			}
-		}()
+		orderID, ok := processor.unprocessed.Pop()
+		if !ok {
+			// this case should never happen
+			logger.Logger.Error("unprocessed is empty, but should not")
+			semaphore.Release()
+		} else {
+			go func() {
+				defer semaphore.Release()
+				if err := processor.processOrder(ctx, orderID); err != nil {
+					logger.Logger.Warn("can`t retrieve accrual", zap.Error(err))
+				}
+			}()
+		}
 	}
 }
 
-func (processor *Retriever) processOne(ctx context.Context) error {
-	orderID, ok := processor.unprocessed.Pop()
-	if !ok {
-		processor.setRetryAfter(time.Now().Add(NoTasksDelay))
-		return nil
-	}
-
+func (processor *Retriever) processOrder(ctx context.Context, orderID uint64) error {
 	accrual, err := processor.accrualClient.GetAccrual(ctx, orderID)
 	if err != nil {
 		target := client.ErrTooManyRequests{}
 		if errors.As(err, &target) {
-			processor.setRetryAfter(target.RetryAfterTime)
+			processor.setWaitFor(target.RetryAfterTime)
 			processor.unprocessed.Push(orderID)
 		} else {
 			processor.unprocessed.PushDelayed(ctx, orderID, FailedTaskDelay)
@@ -83,35 +86,49 @@ func (processor *Retriever) processOne(ctx context.Context) error {
 	return nil
 }
 
-// Lock-free processRetryAfterIfExists
-func (processor *Retriever) processRetryAfterIfExists() {
+// Lock-free waitIfNeed
+func (processor *Retriever) waitIfNeed(ctx context.Context) error {
+	for processor.unprocessed.Count() == 0 {
+		select {
+		case <-ctx.Done():
+			return context.Cause(ctx)
+		case <-time.After(NoTasksDelay):
+			continue
+		}
+	}
+
 	for {
-		retryAfter := processor.retryAfter.Load()
-		if retryAfter == nil {
-			return
+		waitFor := processor.waitFor.Load()
+		if waitFor == nil {
+			return nil
 		}
 
-		if sleepDuration := retryAfter.Sub(time.Now()); sleepDuration > 0 {
-			time.Sleep(sleepDuration)
+		if sleepDuration := waitFor.Sub(time.Now()); sleepDuration > 0 {
+			select {
+			case <-ctx.Done():
+				return context.Cause(ctx)
+			case <-time.After(sleepDuration):
+				// sleep done
+			}
 		}
 
-		if processor.retryAfter.CompareAndSwap(retryAfter, nil) {
-			return
+		if processor.waitFor.CompareAndSwap(waitFor, nil) {
+			return nil
 		}
 	}
 }
 
-// Lock-free setRetryAfter
-func (processor *Retriever) setRetryAfter(retryAfter time.Time) {
-	retryAfter = retryAfter.Round(time.Second)
+// Lock-free setWaitFor
+func (processor *Retriever) setWaitFor(new time.Time) {
+	new = new.Round(time.Second)
 
-	if retryAfter.Before(time.Now()) {
+	if new.Before(time.Now()) {
 		return
 	}
 
 	for {
-		if current := processor.retryAfter.Load(); current == nil || current.Before(retryAfter) {
-			if !processor.retryAfter.CompareAndSwap(current, &retryAfter) {
+		if current := processor.waitFor.Load(); current == nil || current.Before(new) {
+			if !processor.waitFor.CompareAndSwap(current, &new) {
 				continue
 			}
 		}
