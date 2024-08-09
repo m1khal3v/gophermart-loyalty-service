@@ -4,7 +4,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/task"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/auth"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/balance"
@@ -12,26 +11,19 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller/withdrawal"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
 	internalMiddleware "github.com/m1khal3v/gophermart-loyalty-service/internal/middleware"
 	pkgMiddleware "github.com/m1khal3v/gophermart-loyalty-service/pkg/middleware"
 	"time"
 )
 
 func New(
-	appEnv string,
-	userManager *manager.UserManager,
-	orderManager *manager.OrderManager,
-	taskManager *task.Manager,
-	withdrawalManager *manager.WithdrawalManager,
-	userWithdrawalManager *manager.UserWithdrawalManager,
+	enableRateLimitForAnonymous bool,
+	authRoutes *auth.Container,
+	orderRoutes *order.Container,
+	balanceRoutes *balance.Container,
+	withdrawalRoutes *withdrawal.Container,
 	jwt *jwt.Container,
 ) chi.Router {
-	authRoutes := auth.NewContainer(userManager)
-	orderRoutes := order.NewContainer(orderManager, taskManager)
-	balanceRoutes := balance.NewContainer(userManager, withdrawalManager, userWithdrawalManager)
-	withdrawalRoutes := withdrawal.NewContainer(withdrawalManager)
-
 	router := chi.NewRouter()
 	router.Use(pkgMiddleware.ZapLogRequest(logger.Logger, "http-request"))
 	router.Use(internalMiddleware.Recover())
@@ -43,7 +35,7 @@ func New(
 		router.Route("/user", func(router chi.Router) {
 			// Anonymous
 			router.Group(func(router chi.Router) {
-				if appEnv == "prod" {
+				if enableRateLimitForAnonymous {
 					router.Use(httprate.Limit(
 						1,
 						time.Second*3,

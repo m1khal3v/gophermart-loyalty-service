@@ -14,6 +14,7 @@ migrate:
 	docker compose run --rm goose
 
 diff:
+	docker compose -f atlas.yml build && \
 	docker compose -f atlas.yml run --rm atlas migrate hash --env gorm && \
 	docker compose -f atlas.yml run --rm atlas migrate diff --env gorm && \
 	docker compose -f atlas.yml down --remove-orphans

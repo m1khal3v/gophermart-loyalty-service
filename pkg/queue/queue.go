@@ -1,10 +1,13 @@
 package queue
 
+import (
+	"context"
+	"time"
+)
+
 type Queue[T any] struct {
 	items chan T
 }
-
-type removeBatchFilter[T any] func(items []T) error
 
 func New[T any](size uint64) *Queue[T] {
 	return &Queue[T]{
@@ -16,47 +19,24 @@ func (queue *Queue[T]) Push(item T) {
 	queue.items <- item
 }
 
-func (queue *Queue[T]) PushBatch(items []T) {
-	for _, item := range items {
-		queue.items <- item
-	}
-}
-
-func (queue *Queue[T]) PushChannel(items <-chan T) {
-	for item := range items {
-		queue.items <- item
-	}
-}
-
-func (queue *Queue[T]) Pop(count uint64) []T {
-	if count == 0 || len(queue.items) == 0 {
-		return []T{}
-	}
-
-	items := make([]T, 0, count)
-
-	for i := uint64(0); i < count; i++ {
+func (queue *Queue[T]) PushDelayed(ctx context.Context, item T, delay time.Duration) {
+	go func() {
 		select {
-		case item := <-queue.items:
-			items = append(items, item)
-		default:
-			// no more items to return
-			return items
+		case <-ctx.Done():
+			// push cancelled if context cancelled
+		case <-time.After(delay):
+			queue.items <- item
 		}
-	}
-
-	return items
+	}()
 }
 
-func (queue *Queue[T]) RemoveBatch(count uint64, filter removeBatchFilter[T]) error {
-	items := queue.Pop(count)
-	if err := filter(items); err != nil {
-		queue.PushBatch(items)
-
-		return err
+func (queue *Queue[T]) Pop() (T, bool) {
+	select {
+	case item := <-queue.items:
+		return item, true
+	default:
+		return *new(T), false
 	}
-
-	return nil
 }
 
 func (queue *Queue[T]) Count() uint64 {

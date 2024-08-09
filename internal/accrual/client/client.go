@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
+	"github.com/m1khal3v/gophermart-loyalty-service/pkg/http/retryafter"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/retry"
 	"io"
 	"net/http"
@@ -33,51 +34,6 @@ type Client struct {
 	resty  *resty.Client
 	config *Config
 }
-
-type ErrUnexpectedStatus struct {
-	Status int
-}
-
-func (err ErrUnexpectedStatus) Error() string {
-	return fmt.Sprintf("unexpected status code: %d", err.Status)
-}
-
-func newErrUnexpectedStatus(status int) ErrUnexpectedStatus {
-	return ErrUnexpectedStatus{
-		Status: status,
-	}
-}
-
-type ErrInvalidAddress struct {
-	Address string
-}
-
-func (err ErrInvalidAddress) Error() string {
-	return fmt.Sprintf("invalid address: %s", err.Address)
-}
-
-func newErrInvalidAddress(address string) ErrInvalidAddress {
-	return ErrInvalidAddress{
-		Address: address,
-	}
-}
-
-type ErrTooManyRequests struct {
-	RetryAfterTime time.Time
-}
-
-func (err ErrTooManyRequests) Error() string {
-	return "too many requests"
-}
-
-func newErrTooManyRequests(retryAfter uint64) ErrTooManyRequests {
-	return ErrTooManyRequests{
-		RetryAfterTime: time.Now().Add(time.Duration(retryAfter) * time.Second),
-	}
-}
-
-var ErrOrderNotFound = errors.New("order not found")
-var ErrInternalServerError = errors.New("internal server error")
 
 func New(config *Config) (*Client, error) {
 	if err := prepareConfig(config); err != nil {
@@ -157,7 +113,7 @@ func (client *Client) createRequest(ctx context.Context) *resty.Request {
 }
 
 func (client *Client) doRequest(request *resty.Request, method, url string) (*resty.Response, error) {
-	var result *resty.Response = nil
+	var result *resty.Response
 	do := func() error {
 		var err error
 		result, err = request.Execute(method, url)
@@ -171,12 +127,7 @@ func (client *Client) doRequest(request *resty.Request, method, url string) (*re
 		case http.StatusNoContent:
 			return ErrOrderNotFound
 		case http.StatusTooManyRequests:
-			retryAfter, err := strconv.ParseUint(result.Header().Get("Retry-After"), 10, 64)
-			if err != nil {
-				return err
-			}
-
-			return newErrTooManyRequests(retryAfter)
+			return newErrTooManyRequests(retryafter.Parse(result.Header().Get("Retry-After"), time.Second*10))
 		case http.StatusInternalServerError:
 			return ErrInternalServerError
 		default:
