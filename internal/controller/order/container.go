@@ -6,13 +6,13 @@ import (
 )
 
 type Container struct {
-	orderManager     *manager.OrderManager
-	unprocessedQueue *queue.Queue[uint64]
+	orderManager *manager.OrderManager
+	orderQueue   *queue.Queue[uint64]
 }
 
-func NewContainer(orderManager *manager.OrderManager, unprocessedQueue *queue.Queue[uint64]) *Container {
+func NewContainer(orderManager *manager.OrderManager, orderQueue *queue.Queue[uint64]) *Container {
 	return &Container{
-		orderManager:     orderManager,
-		unprocessedQueue: unprocessedQueue,
+		orderManager: orderManager,
+		orderQueue:   orderQueue,
 	}
 }

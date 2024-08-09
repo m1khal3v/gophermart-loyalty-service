@@ -14,7 +14,8 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/processor"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/processor/retriever"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/processor/updater"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/router"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
@@ -30,8 +31,8 @@ import (
 
 type app struct {
 	server    *http.Server
-	retriever *processor.Retriever
-	updater   *processor.Updater
+	retriever *retriever.Processor
+	updater   *updater.Processor
 }
 
 // New function acts as the simplest configuration-based dependency injector
@@ -66,15 +67,15 @@ func New(config *config.Config) (*app, error) {
 	if err != nil {
 		return nil, err
 	}
-	unprocessedQueue := queue.New[uint64](10000)
+	orderQueue := queue.New[uint64](10000)
 	for unprocessedID := range unprocessedIDs {
-		unprocessedQueue.Push(unprocessedID)
+		orderQueue.Push(unprocessedID)
 	}
-	processedQueue := queue.New[*responses.Accrual](10000)
+	accrualQueue := queue.New[*responses.Accrual](10000)
 
 	// Router
 	authRoutes := auth.NewContainer(userManager)
-	orderRoutes := order.NewContainer(orderManager, unprocessedQueue)
+	orderRoutes := order.NewContainer(orderManager, orderQueue)
 	balanceRoutes := balance.NewContainer(userManager, withdrawalManager, userWithdrawalManager)
 	withdrawalRoutes := withdrawal.NewContainer(withdrawalManager)
 	router := router.New(config.AppEnv == "prod", authRoutes, orderRoutes, balanceRoutes, withdrawalRoutes, jwt)
@@ -92,8 +93,8 @@ func New(config *config.Config) (*app, error) {
 			Addr:    config.RunAddress,
 			Handler: router,
 		},
-		retriever: processor.NewRetriever(client, unprocessedQueue, processedQueue, config.RetrieverConcurrency),
-		updater:   processor.NewUpdater(unprocessedQueue, processedQueue, orderManager, userOrderManager, config.UpdaterConcurrency),
+		retriever: retriever.New(client, orderQueue, accrualQueue, config.RetrieverConcurrency),
+		updater:   updater.New(orderQueue, accrualQueue, orderManager, userOrderManager, config.UpdaterConcurrency),
 	}, nil
 }
 

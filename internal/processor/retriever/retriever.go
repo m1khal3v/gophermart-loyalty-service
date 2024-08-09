@@ -1,4 +1,4 @@
-package processor
+package retriever
 
 import (
 	"context"
@@ -17,29 +17,29 @@ import (
 const NoTasksDelay = time.Second * 5
 const FailedTaskDelay = time.Second * 10
 
-type Retriever struct {
+type Processor struct {
 	accrualClient *client.Client
-	unprocessed   *queue.Queue[uint64]
-	processed     *queue.Queue[*responses.Accrual]
+	orderQueue    *queue.Queue[uint64]
+	accrualQueue  *queue.Queue[*responses.Accrual]
 	concurrency   uint64
 	waitFor       atomic.Pointer[time.Time]
 }
 
-func NewRetriever(
+func New(
 	accrualClient *client.Client,
-	unprocessed *queue.Queue[uint64],
-	processed *queue.Queue[*responses.Accrual],
+	orderQueue *queue.Queue[uint64],
+	accrualQueue *queue.Queue[*responses.Accrual],
 	concurrency uint64,
-) *Retriever {
-	return &Retriever{
+) *Processor {
+	return &Processor{
 		accrualClient: accrualClient,
-		unprocessed:   unprocessed,
-		processed:     processed,
+		orderQueue:    orderQueue,
+		accrualQueue:  accrualQueue,
 		concurrency:   concurrency,
 	}
 }
 
-func (processor *Retriever) Process(ctx context.Context) error {
+func (processor *Processor) Process(ctx context.Context) error {
 	semaphore := semaphore.New(processor.concurrency)
 
 	for {
@@ -51,10 +51,10 @@ func (processor *Retriever) Process(ctx context.Context) error {
 			return err
 		}
 
-		orderID, ok := processor.unprocessed.Pop()
+		orderID, ok := processor.orderQueue.Pop()
 		if !ok {
 			// this case should never happen
-			logger.Logger.Error("unprocessed is empty, but should not")
+			logger.Logger.Error("order queue is empty, but should not")
 			semaphore.Release()
 		} else {
 			go func() {
@@ -67,28 +67,28 @@ func (processor *Retriever) Process(ctx context.Context) error {
 	}
 }
 
-func (processor *Retriever) processOrder(ctx context.Context, orderID uint64) error {
+func (processor *Processor) processOrder(ctx context.Context, orderID uint64) error {
 	accrual, err := processor.accrualClient.GetAccrual(ctx, orderID)
 	if err != nil {
 		target := client.ErrTooManyRequests{}
 		if errors.As(err, &target) {
 			processor.setWaitFor(target.RetryAfterTime)
-			processor.unprocessed.Push(orderID)
+			processor.orderQueue.Push(orderID)
 		} else {
-			processor.unprocessed.PushDelayed(ctx, orderID, FailedTaskDelay)
+			processor.orderQueue.PushDelayed(ctx, orderID, FailedTaskDelay)
 		}
 
 		return fmt.Errorf("accrual %d: %w", orderID, err)
 	}
 
-	processor.processed.Push(accrual)
+	processor.accrualQueue.Push(accrual)
 
 	return nil
 }
 
 // Lock-free waitIfNeed
-func (processor *Retriever) waitIfNeed(ctx context.Context) error {
-	for processor.unprocessed.Count() == 0 {
+func (processor *Processor) waitIfNeed(ctx context.Context) error {
+	for processor.orderQueue.Count() == 0 {
 		select {
 		case <-ctx.Done():
 			return context.Cause(ctx)
@@ -119,14 +119,14 @@ func (processor *Retriever) waitIfNeed(ctx context.Context) error {
 }
 
 // Lock-free setWaitFor
-func (processor *Retriever) setWaitFor(new time.Time) {
+func (processor *Processor) setWaitFor(new time.Time) {
 	new = new.Round(time.Second)
 
-	if new.Before(time.Now()) {
-		return
-	}
-
 	for {
+		if new.Before(time.Now()) {
+			return
+		}
+
 		if current := processor.waitFor.Load(); current == nil || current.Before(new) {
 			if !processor.waitFor.CompareAndSwap(current, &new) {
 				continue

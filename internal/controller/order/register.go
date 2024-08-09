@@ -58,7 +58,7 @@ func (container *Container) Register(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	container.unprocessedQueue.Push(order.ID)
+	container.orderQueue.Push(order.ID)
 	controller.WriteJSONResponse(http.StatusAccepted, responses.Message{
 		Message: "order has been successfully registered for processing",
 	}, writer)
