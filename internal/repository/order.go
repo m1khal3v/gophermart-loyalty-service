@@ -6,6 +6,7 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/repository"
 	"gorm.io/gorm"
+	"time"
 )
 
 type OrderRepository struct {
@@ -51,8 +52,9 @@ func (repository *OrderRepository) FindUnprocessedIDs(ctx context.Context) (<-ch
 	return repository.FindIDsBy(ctx, "created_at ASC", "status IN (?)", entity.OrderStatusNew, entity.OrderStatusProcessing)
 }
 
-func (repository *OrderRepository) UpdateStatus(ctx context.Context, id uint64, status string) error {
-	return repository.UpdateOmitZero(ctx, &entity.Order{ID: id}, &entity.Order{
-		Status: status,
-	})
+func (repository *OrderRepository) UpdateStatus(ctx context.Context, ids []uint64, status string) error {
+	return repository.UpdateOmitZero(ctx, &entity.Order{}, &entity.Order{
+		Status:    status,
+		UpdatedAt: time.Now(),
+	}, "id IN (?)", ids)
 }

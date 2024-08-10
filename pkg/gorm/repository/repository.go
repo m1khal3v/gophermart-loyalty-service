@@ -103,6 +103,11 @@ func (repository *Repository[T]) Save(ctx context.Context, entity *T) error {
 	return repository.db.WithContext(ctx).Save(entity).Error
 }
 
-func (repository *Repository[T]) UpdateOmitZero(ctx context.Context, model *T, update *T) error {
-	return repository.db.WithContext(ctx).Model(model).Updates(update).Error
+func (repository *Repository[T]) UpdateOmitZero(ctx context.Context, model *T, update *T, where any, args ...any) error {
+	base := repository.db.WithContext(ctx).Model(model)
+	if where != nil {
+		base.Where(where, args)
+	}
+
+	return base.Updates(update).Error
 }

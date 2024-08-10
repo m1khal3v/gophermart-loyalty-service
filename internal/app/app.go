@@ -14,8 +14,11 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/processor/retriever"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/processor/updater"
+	retrieverProcessor "github.com/m1khal3v/gophermart-loyalty-service/internal/processor/retriever"
+	routerProcessor "github.com/m1khal3v/gophermart-loyalty-service/internal/processor/router"
+	invalidProcessor "github.com/m1khal3v/gophermart-loyalty-service/internal/processor/status/invalid"
+	processedProcessor "github.com/m1khal3v/gophermart-loyalty-service/internal/processor/status/processed"
+	processingProcessor "github.com/m1khal3v/gophermart-loyalty-service/internal/processor/status/processing"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/router"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
@@ -30,9 +33,12 @@ import (
 )
 
 type app struct {
-	server    *http.Server
-	retriever *retriever.Processor
-	updater   *updater.Processor
+	server              *http.Server
+	retrieverProcessor  *retrieverProcessor.Processor
+	routerProcessor     *routerProcessor.Processor
+	processingProcessor *processingProcessor.Processor
+	invalidProcessor    *invalidProcessor.Processor
+	processedProcessor  *processedProcessor.Processor
 }
 
 // New function acts as the simplest configuration-based dependency injector
@@ -71,7 +77,10 @@ func New(config *config.Config) (*app, error) {
 	for unprocessedID := range unprocessedIDs {
 		orderQueue.Push(unprocessedID)
 	}
-	accrualQueue := queue.New[*responses.Accrual](10000)
+	routerQueue := queue.New[*responses.Accrual](10000)
+	invalidQueue := queue.New[*responses.Accrual](10000)
+	processingQueue := queue.New[*responses.Accrual](10000)
+	processedQueue := queue.New[*responses.Accrual](10000)
 
 	// Router
 	authRoutes := auth.NewContainer(userManager)
@@ -93,8 +102,11 @@ func New(config *config.Config) (*app, error) {
 			Addr:    config.RunAddress,
 			Handler: router,
 		},
-		retriever: retriever.New(client, orderQueue, accrualQueue, config.RetrieverConcurrency),
-		updater:   updater.New(orderQueue, accrualQueue, orderManager, userOrderManager, config.UpdaterConcurrency),
+		retrieverProcessor:  retrieverProcessor.NewProcessor(client, orderQueue, routerQueue, config.RetrieverConcurrency),
+		routerProcessor:     routerProcessor.NewProcessor(orderQueue, routerQueue, processingQueue, invalidQueue, processedQueue, config.RouterConcurrency),
+		processingProcessor: processingProcessor.NewProcessor(orderQueue, processingQueue, orderManager, config.ProcessingConcurrency, config.UpdateBatchSize),
+		invalidProcessor:    invalidProcessor.NewProcessor(invalidQueue, orderManager, config.InvalidConcurrency, config.UpdateBatchSize),
+		processedProcessor:  processedProcessor.NewProcessor(processedQueue, userOrderManager, config.ProcessedConcurrency, config.UpdateBatchSize),
 	}, nil
 }
 
@@ -107,7 +119,7 @@ func (app *app) Run() {
 	defer errCancel(nil)
 
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(6)
 	go func() {
 		defer wg.Done()
 		if err := app.server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
@@ -116,14 +128,32 @@ func (app *app) Run() {
 	}()
 	go func() {
 		defer wg.Done()
-		if err := app.retriever.Process(suspendCtx); !errors.Is(err, context.Canceled) {
-			errCancel(fmt.Errorf("retriever error: %w", err))
+		if err := app.retrieverProcessor.Process(suspendCtx); !errors.Is(err, context.Canceled) {
+			errCancel(fmt.Errorf("retriever processor error: %w", err))
 		}
 	}()
 	go func() {
 		defer wg.Done()
-		if err := app.updater.Process(suspendCtx); !errors.Is(err, context.Canceled) {
-			errCancel(fmt.Errorf("updater error: %w", err))
+		if err := app.routerProcessor.Process(suspendCtx); !errors.Is(err, context.Canceled) {
+			errCancel(fmt.Errorf("router processor error: %w", err))
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		if err := app.processingProcessor.Process(suspendCtx); !errors.Is(err, context.Canceled) {
+			errCancel(fmt.Errorf("processing processor error: %w", err))
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		if err := app.invalidProcessor.Process(suspendCtx); !errors.Is(err, context.Canceled) {
+			errCancel(fmt.Errorf("invalid processor error: %w", err))
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		if err := app.processedProcessor.Process(suspendCtx); !errors.Is(err, context.Canceled) {
+			errCancel(fmt.Errorf("processed processor error: %w", err))
 		}
 	}()
 

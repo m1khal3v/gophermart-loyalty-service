@@ -19,7 +19,11 @@ func main() {
 		zap.String("accrual_system_address", config.AccrualSystemAddress),
 		zap.String("database_uri", config.DatabaseURI),
 		zap.Uint64("retriever_concurrency", config.RetrieverConcurrency),
-		zap.Uint64("updater_concurrency", config.UpdaterConcurrency),
+		zap.Uint64("router_concurrency", config.RouterConcurrency),
+		zap.Uint64("processing_concurrency", config.ProcessingConcurrency),
+		zap.Uint64("invalid_concurrency", config.InvalidConcurrency),
+		zap.Uint64("processed_concurrency", config.ProcessedConcurrency),
+		zap.Uint64("update_batch_size", config.UpdateBatchSize),
 		zap.String("log_level", config.LogLevel),
 	)
 

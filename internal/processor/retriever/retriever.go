@@ -25,7 +25,7 @@ type Processor struct {
 	waitFor       atomic.Pointer[time.Time]
 }
 
-func New(
+func NewProcessor(
 	accrualClient *client.Client,
 	orderQueue *queue.Queue[uint64],
 	accrualQueue *queue.Queue[*responses.Accrual],
