@@ -44,6 +44,12 @@ func (queue *Queue[T]) PushDelayed(ctx context.Context, item T, delay time.Durat
 	}()
 }
 
+func (queue *Queue[T]) PushBatchDelayed(ctx context.Context, items []T, delay time.Duration) {
+	for _, item := range items {
+		queue.PushDelayed(ctx, item, delay)
+	}
+}
+
 func (queue *Queue[T]) Pop() (T, bool) {
 	select {
 	case item := <-queue.items:

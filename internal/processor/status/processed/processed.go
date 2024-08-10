@@ -74,10 +74,7 @@ func (processor *Processor) processAccruals(ctx context.Context, accruals []*res
 		return nil
 	})
 	if err != nil {
-		for _, accrual := range accruals {
-			processor.processedQueue.PushDelayed(ctx, accrual, FailedTaskDelay)
-		}
-
+		processor.processedQueue.PushBatchDelayed(ctx, accruals, FailedTaskDelay)
 		return err
 	}
 

@@ -75,17 +75,11 @@ func (processor *Processor) processAccruals(ctx context.Context, accruals []*res
 	}
 
 	if err := processor.orderManager.UpdateStatus(ctx, ids, entity.OrderStatusProcessing); err != nil {
-		for _, accrual := range accruals {
-			processor.processingQueue.PushDelayed(ctx, accrual, FailedTaskDelay)
-		}
-
+		processor.processingQueue.PushBatchDelayed(ctx, accruals, FailedTaskDelay)
 		return err
 	}
 
-	for _, id := range ids {
-		processor.orderQueue.PushDelayed(ctx, id, NotFinalStatusDelay)
-	}
-
+	processor.orderQueue.PushBatchDelayed(ctx, ids, NotFinalStatusDelay)
 	return nil
 }
 
