@@ -57,12 +57,12 @@ func (processor *Processor) Process(ctx context.Context) error {
 			logger.Logger.Error("order queue is empty, but should not")
 			semaphore.Release()
 		} else {
-			go func() {
+			go func(orderID uint64) {
 				defer semaphore.Release()
 				if err := processor.processOrder(ctx, orderID); err != nil {
 					logger.Logger.Warn("can`t retrieve accrual", zap.Error(err))
 				}
-			}()
+			}(orderID)
 		}
 	}
 }

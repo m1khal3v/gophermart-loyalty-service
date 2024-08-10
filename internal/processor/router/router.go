@@ -58,10 +58,10 @@ func (processor *Processor) Process(ctx context.Context) error {
 			logger.Logger.Error("router queue is empty, but should not")
 			semaphore.Release()
 		} else {
-			go func() {
+			go func(accrual *responses.Accrual) {
 				defer semaphore.Release()
 				processor.processAccrual(ctx, accrual)
-			}()
+			}(accrual)
 		}
 	}
 }

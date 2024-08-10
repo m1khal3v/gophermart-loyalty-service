@@ -54,12 +54,12 @@ func (processor *Processor) Process(ctx context.Context) error {
 			logger.Logger.Error("accrual in invalid status queue is empty, but should not")
 			semaphore.Release()
 		} else {
-			go func() {
+			go func(accruals []*responses.Accrual) {
 				defer semaphore.Release()
 				if err := processor.processAccruals(ctx, accruals); err != nil {
 					logger.Logger.Warn("can`t update orders", zap.Error(err))
 				}
-			}()
+			}(accruals)
 		}
 	}
 }
