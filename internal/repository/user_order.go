@@ -18,37 +18,31 @@ func NewUserOrderRepository(db *gorm.DB) *UserOrderRepository {
 }
 
 func (userOrderRepository *UserOrderRepository) Accrue(ctx context.Context, orderID uint64, accrual float64) error {
-	transaction := userOrderRepository.db.Begin()
-	orderRepository := NewOrderRepository(transaction)
-	userRepository := NewUserRepository(transaction)
+	return userOrderRepository.db.Transaction(func(transaction *gorm.DB) error {
+		orderRepository := NewOrderRepository(transaction)
+		userRepository := NewUserRepository(transaction)
 
-	order, err := orderRepository.FindByID(ctx, orderID)
-	if err != nil {
-		transaction.Rollback()
-		return err
-	}
+		order, err := orderRepository.FindByID(ctx, orderID)
+		if err != nil {
+			return err
+		}
 
-	order.Status = entity.OrderStatusProcessed
-	order.Accrual = money.New(accrual)
-	if err := orderRepository.Save(ctx, order); err != nil {
-		transaction.Rollback()
-		return err
-	}
+		order.Status = entity.OrderStatusProcessed
+		order.Accrual = money.New(accrual)
+		if err := orderRepository.Save(ctx, order); err != nil {
+			return err
+		}
 
-	if ok, err := userRepository.Accrue(ctx, order.UserID, accrual); err != nil || !ok {
-		transaction.Rollback()
-		return err
-	}
+		if ok, err := userRepository.Accrue(ctx, order.UserID, accrual); err != nil || !ok {
+			return err
+		}
 
-	return transaction.Commit().Error
+		return nil
+	})
 }
 
 func (userOrderRepository *UserOrderRepository) Transaction(ctx context.Context, fn func(ctx context.Context, repository *UserOrderRepository) error) error {
-	transaction := userOrderRepository.db.Begin()
-	if err := fn(ctx, NewUserOrderRepository(transaction)); err != nil {
-		transaction.Rollback()
-		return err
-	}
-
-	return transaction.Commit().Error
+	return userOrderRepository.db.Transaction(func(transaction *gorm.DB) error {
+		return fn(ctx, NewUserOrderRepository(transaction))
+	})
 }
