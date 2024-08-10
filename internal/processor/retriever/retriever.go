@@ -103,7 +103,7 @@ func (processor *Processor) waitIfNeed(ctx context.Context) error {
 			return nil
 		}
 
-		if sleepDuration := waitFor.Sub(time.Now()); sleepDuration > 0 {
+		if sleepDuration := time.Until(*waitFor); sleepDuration > 0 {
 			select {
 			case <-ctx.Done():
 				return context.Cause(ctx)

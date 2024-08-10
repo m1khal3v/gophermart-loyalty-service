@@ -11,7 +11,7 @@ func Parse(retryAfter string, defaultValue time.Duration) time.Duration {
 	}
 
 	if dateTime, err := parseHTTPDate(retryAfter); err == nil {
-		duration := time.Now().Sub(dateTime)
+		duration := time.Since(dateTime)
 
 		if duration < 0 {
 			return 0
