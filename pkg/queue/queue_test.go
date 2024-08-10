@@ -38,7 +38,7 @@ func TestQueue(t *testing.T) {
 
 			require.Equal(t, count, queue.Count())
 			items := make([]bool, 0, count)
-			items = append(items, queue.Pop(count)...)
+			items = append(items, queue.PopBatch(count)...)
 			expectedItems := make([]bool, 0, count)
 			expectedItems = append(expectedItems, tt.items...)
 			expectedItems = append(expectedItems, tt.items...)
