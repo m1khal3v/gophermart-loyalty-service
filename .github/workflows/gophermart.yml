@@ -65,6 +65,14 @@ jobs:
 
       - name: Test
         run: |
+          go test -v ./...
+
+      - name: Test race
+        run: |
+          go test -v -race ./...
+
+      - name: Test Practicum
+        run: |
           gophermarttest \
             -test.v -test.run=^TestGophermart$ \
             -gophermart-binary-path=cmd/gophermart/gophermart \

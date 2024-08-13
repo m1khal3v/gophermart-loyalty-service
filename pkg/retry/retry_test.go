@@ -131,7 +131,7 @@ func TestRetry(t *testing.T) {
 	attempts := uint64(0)
 	tests := []struct {
 		name         string
-		attempts     uint64
+		retries      uint64
 		wantAttempts uint64
 		function     func() error
 		filter       func(err error) bool
@@ -139,7 +139,7 @@ func TestRetry(t *testing.T) {
 	}{
 		{
 			name:         "first attempt ok",
-			attempts:     1,
+			retries:      1,
 			wantAttempts: 1,
 			function: func() error {
 				return nil
@@ -151,7 +151,7 @@ func TestRetry(t *testing.T) {
 		},
 		{
 			name:         "non-retryable error",
-			attempts:     3,
+			retries:      3,
 			wantAttempts: 1,
 			function: func() error {
 				return errors.New("test error")
@@ -163,8 +163,8 @@ func TestRetry(t *testing.T) {
 		},
 		{
 			name:         "retryable error fail",
-			attempts:     3,
-			wantAttempts: 3,
+			retries:      3,
+			wantAttempts: 4,
 			function: func() error {
 				return errors.New("test error")
 			},
@@ -175,7 +175,7 @@ func TestRetry(t *testing.T) {
 		},
 		{
 			name:         "retryable error ok",
-			attempts:     3,
+			retries:      3,
 			wantAttempts: 2,
 			function: func() error {
 				if attempts > 1 {
@@ -195,7 +195,7 @@ func TestRetry(t *testing.T) {
 				attempts++
 				return tt.function()
 			}
-			err := Retry(0, 0, tt.attempts, 0, function, tt.filter)
+			err := Retry(0, 0, tt.retries, 0, function, tt.filter)
 			if tt.wantErr {
 				assert.Error(t, err)
 			}
