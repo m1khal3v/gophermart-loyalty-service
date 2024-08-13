@@ -22,12 +22,19 @@ import (
 // In border cases, you can disable address verification through the config
 var addressRegex = regexp.MustCompile(`^https?://[a-zA-Z0-9][a-zA-Z0-9-.]*(:\d+)?(/[a-zA-Z0-9-_+%]*)*$`)
 
+const defaultRetryAfter = time.Second * 10
+
 type Config struct {
 	Address string
 
 	DisableCompress          bool
 	DisableAddressValidation bool
 	DisableRetry             bool
+
+	DefaultRetryAfter time.Duration
+
+	// for tests
+	transport http.RoundTripper
 }
 
 type Client struct {
@@ -42,6 +49,7 @@ func New(config *Config) (*Client, error) {
 
 	client := resty.
 		New().
+		SetTransport(config.transport).
 		SetBaseURL(config.Address).
 		SetHeader("Accept-Encoding", "gzip")
 
@@ -61,6 +69,14 @@ func prepareConfig(config *Config) error {
 		if !addressRegex.MatchString(config.Address) {
 			return newErrInvalidAddress(config.Address)
 		}
+	}
+
+	if config.DefaultRetryAfter == 0 {
+		config.DefaultRetryAfter = defaultRetryAfter
+	}
+
+	if config.transport == nil {
+		config.transport = http.DefaultTransport
 	}
 
 	return nil
@@ -127,7 +143,7 @@ func (client *Client) doRequest(request *resty.Request, method, url string) (*re
 		case http.StatusNoContent:
 			return ErrOrderNotFound
 		case http.StatusTooManyRequests:
-			return newErrTooManyRequests(retryafter.Parse(result.Header().Get("Retry-After"), time.Second*10))
+			return newErrTooManyRequests(retryafter.Parse(result.Header().Get("Retry-After"), client.config.DefaultRetryAfter))
 		case http.StatusInternalServerError:
 			return ErrInternalServerError
 		default:

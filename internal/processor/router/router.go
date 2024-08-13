@@ -83,7 +83,6 @@ func (processor *Processor) processAccrual(ctx context.Context, accrual *respons
 	}
 }
 
-// Lock-free waitIfNeed
 func (processor *Processor) waitIfNeed(ctx context.Context) error {
 	for processor.routerQueue.Count() == 0 {
 		select {

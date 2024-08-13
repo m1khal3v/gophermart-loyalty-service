@@ -78,7 +78,6 @@ func (processor *Processor) processAccruals(ctx context.Context, accruals []*res
 	return nil
 }
 
-// Lock-free waitIfNeed
 func (processor *Processor) waitIfNeed(ctx context.Context) error {
 	for processor.invalidQueue.Count() == 0 {
 		select {
