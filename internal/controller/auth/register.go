@@ -11,7 +11,7 @@ import (
 )
 
 func (container *Container) Register(writer http.ResponseWriter, request *http.Request) {
-	registerRequest, ok := controller.DecodeAndValidateJSONRequest[requests.Auth](request, writer)
+	registerRequest, ok := controller.DecodeAndValidateJSONRequest[requests.Register](request, writer)
 	if !ok {
 		return
 	}

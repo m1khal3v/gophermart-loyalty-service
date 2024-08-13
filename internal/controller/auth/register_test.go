@@ -15,12 +15,12 @@ import (
 	"testing"
 )
 
-func TestContainer_Login(t *testing.T) {
+func TestContainer_Register(t *testing.T) {
 	tests := []struct {
 		name          string
 		contentType   string
 		requestString string
-		request       requests.Login
+		request       requests.Register
 		manager       func() UserManager
 		verify        func(manager UserManager)
 		status        int
@@ -29,15 +29,15 @@ func TestContainer_Login(t *testing.T) {
 		errResponse   *responses.APIError
 	}{
 		{
-			name:        "valid login",
+			name:        "valid register",
 			contentType: "application/json",
-			request: requests.Login{
+			request: requests.Register{
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
 			manager: func() UserManager {
 				manager := Mock[UserManager]()
-				WhenDouble(manager.Authorize(
+				WhenDouble(manager.Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
 					Exact("$uP3R$3cR3t"),
@@ -46,7 +46,7 @@ func TestContainer_Login(t *testing.T) {
 				return manager
 			},
 			verify: func(manager UserManager) {
-				Verify(manager, Once()).Authorize(
+				Verify(manager, Once()).Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
 					Exact("$uP3R$3cR3t"),
@@ -61,7 +61,7 @@ func TestContainer_Login(t *testing.T) {
 		{
 			name:        "invalid content-type",
 			contentType: "invalid",
-			request: requests.Login{
+			request: requests.Register{
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
@@ -69,7 +69,7 @@ func TestContainer_Login(t *testing.T) {
 				return Mock[UserManager]()
 			},
 			verify: func(manager UserManager) {
-				Verify(manager, Never()).Authorize(
+				Verify(manager, Never()).Register(
 					AnyContext(),
 					AnyString(),
 					AnyString(),
@@ -89,7 +89,7 @@ func TestContainer_Login(t *testing.T) {
 				return Mock[UserManager]()
 			},
 			verify: func(manager UserManager) {
-				Verify(manager, Never()).Authorize(
+				Verify(manager, Never()).Register(
 					AnyContext(),
 					AnyString(),
 					AnyString(),
@@ -109,7 +109,7 @@ func TestContainer_Login(t *testing.T) {
 				return Mock[UserManager]()
 			},
 			verify: func(manager UserManager) {
-				Verify(manager, Never()).Authorize(
+				Verify(manager, Never()).Register(
 					AnyContext(),
 					AnyString(),
 					AnyString(),
@@ -124,12 +124,12 @@ func TestContainer_Login(t *testing.T) {
 		{
 			name:          "invalid password length",
 			contentType:   "application/json",
-			requestString: `{"login": "ivan_ivanov", "password": ""}`,
+			requestString: `{"login": "ivan_ivanov", "password": "$uP3"}`,
 			manager: func() UserManager {
 				return Mock[UserManager]()
 			},
 			verify: func(manager UserManager) {
-				Verify(manager, Never()).Authorize(
+				Verify(manager, Never()).Register(
 					AnyContext(),
 					AnyString(),
 					AnyString(),
@@ -144,12 +144,12 @@ func TestContainer_Login(t *testing.T) {
 		{
 			name:          "invalid login length",
 			contentType:   "application/json",
-			requestString: `{"login": "", "password": "$uP3rS3cr3t"}`,
+			requestString: `{"login": "ok", "password": "$uP3rS3cr3t"}`,
 			manager: func() UserManager {
 				return Mock[UserManager]()
 			},
 			verify: func(manager UserManager) {
-				Verify(manager, Never()).Authorize(
+				Verify(manager, Never()).Register(
 					AnyContext(),
 					AnyString(),
 					AnyString(),
@@ -162,45 +162,65 @@ func TestContainer_Login(t *testing.T) {
 			},
 		},
 		{
-			name:        "invalid credentials",
+			name:          "invalid login symbol",
+			contentType:   "application/json",
+			requestString: `{"login": "ivan=ivanov", "password": "$uP3rS3cr3t"}`,
+			manager: func() UserManager {
+				return Mock[UserManager]()
+			},
+			verify: func(manager UserManager) {
+				Verify(manager, Never()).Register(
+					AnyContext(),
+					AnyString(),
+					AnyString(),
+				)
+			},
+			status: http.StatusBadRequest,
+			errResponse: &responses.APIError{
+				Code:    http.StatusBadRequest,
+				Message: "Invalid request received",
+			},
+		},
+		{
+			name:        "login already exists",
 			contentType: "application/json",
-			request: requests.Login{
+			request: requests.Register{
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
 			manager: func() UserManager {
 				manager := Mock[UserManager]()
-				WhenDouble(manager.Authorize(
+				WhenDouble(manager.Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
 					Exact("$uP3R$3cR3t"),
-				)).ThenReturn("", managers.ErrInvalidCredentials)
+				)).ThenReturn("", managers.ErrLoginAlreadyExists)
 
 				return manager
 			},
 			verify: func(manager UserManager) {
-				Verify(manager, Once()).Authorize(
+				Verify(manager, Once()).Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
 					Exact("$uP3R$3cR3t"),
 				)
 			},
-			status: http.StatusUnauthorized,
+			status: http.StatusConflict,
 			errResponse: &responses.APIError{
-				Code:    http.StatusUnauthorized,
-				Message: "invalid credentials",
+				Code:    http.StatusConflict,
+				Message: "login already exists",
 			},
 		},
 		{
 			name:        "internal server error",
 			contentType: "application/json",
-			request: requests.Login{
+			request: requests.Register{
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
 			manager: func() UserManager {
 				manager := Mock[UserManager]()
-				WhenDouble(manager.Authorize(
+				WhenDouble(manager.Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
 					Exact("$uP3R$3cR3t"),
@@ -209,7 +229,7 @@ func TestContainer_Login(t *testing.T) {
 				return manager
 			},
 			verify: func(manager UserManager) {
-				Verify(manager, Once()).Authorize(
+				Verify(manager, Once()).Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
 					Exact("$uP3R$3cR3t"),
@@ -241,7 +261,7 @@ func TestContainer_Login(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/api/user/login", requestBody)
 			request.Header.Set("Content-Type", tt.contentType)
 
-			container.Login(recorder, request)
+			container.Register(recorder, request)
 
 			require.Equal(t, tt.status, recorder.Code)
 			assert.Equal(t, tt.token, recorder.Header().Get("Authorization"))
