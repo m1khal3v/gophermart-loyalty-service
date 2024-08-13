@@ -27,7 +27,7 @@ func TestUserIDFromContext(t *testing.T) {
 		},
 		{
 			name:   "invalid key",
-			ctx:    context.WithValue(context.Background(), "invalidID", uint32(123)),
+			ctx:    context.WithValue(context.Background(), key("invalidID"), uint32(123)),
 			userID: 0,
 			ok:     false,
 		},
