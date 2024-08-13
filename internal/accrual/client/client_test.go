@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func TestClient_SaveMetric(t *testing.T) {
+func TestClient_GetAccrual(t *testing.T) {
 	accrual := 1.23
 	someErr := errors.New("some error")
 	tests := []struct {

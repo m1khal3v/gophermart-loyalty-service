@@ -21,6 +21,7 @@ import (
 	processingProcessor "github.com/m1khal3v/gophermart-loyalty-service/internal/processor/status/processing"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/router"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/server"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
@@ -98,10 +99,7 @@ func New(config *config.Config) (*app, error) {
 	}
 
 	return &app{
-		server: &http.Server{
-			Addr:    config.RunAddress,
-			Handler: router,
-		},
+		server:              server.New(config.RunAddress, router),
 		retrieverProcessor:  retrieverProcessor.NewProcessor(client, orderQueue, routerQueue, config.RetrieverConcurrency),
 		routerProcessor:     routerProcessor.NewProcessor(orderQueue, routerQueue, processingQueue, invalidQueue, processedQueue, config.RouterConcurrency),
 		processingProcessor: processingProcessor.NewProcessor(orderQueue, processingQueue, orderManager, config.ProcessingConcurrency, config.UpdateBatchSize),
