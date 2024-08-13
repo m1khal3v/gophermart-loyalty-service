@@ -13,6 +13,7 @@ import (
 func DecodeAndValidateJSONRequest[T any](request *http.Request, writer http.ResponseWriter) (*T, bool) {
 	if request.Header.Get("Content-Type") != "application/json" {
 		WriteJSONErrorResponse(http.StatusBadRequest, writer, "Invalid Content-Type", nil)
+		return nil, false
 	}
 
 	target := new(T)
@@ -33,6 +34,7 @@ func DecodeAndValidateJSONRequest[T any](request *http.Request, writer http.Resp
 func DecodeAndValidateJSONRequests[T any](request *http.Request, writer http.ResponseWriter) ([]*T, bool) {
 	if request.Header.Get("Content-Type") != "application/json" {
 		WriteJSONErrorResponse(http.StatusBadRequest, writer, "Invalid Content-Type", nil)
+		return nil, false
 	}
 
 	targets := make([]*T, 0)

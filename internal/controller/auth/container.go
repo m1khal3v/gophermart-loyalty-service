@@ -1,14 +1,19 @@
 package auth
 
 import (
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
+	"context"
 )
 
-type Container struct {
-	manager *manager.UserManager
+type UserManager interface {
+	Register(ctx context.Context, login, password string) (string, error)
+	Authorize(ctx context.Context, login, password string) (string, error)
 }
 
-func NewContainer(manager *manager.UserManager) *Container {
+type Container struct {
+	manager UserManager
+}
+
+func NewContainer(manager UserManager) *Container {
 	return &Container{
 		manager: manager,
 	}
