@@ -1,23 +1,29 @@
 package balance
 
 import (
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
+	"context"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 )
 
+type userManager interface {
+	FindByID(ctx context.Context, id uint32) (*entity.User, error)
+}
+
+type userWithdrawalManager interface {
+	Withdraw(ctx context.Context, orderID uint64, userID uint32, sum float64) error
+}
+
 type Container struct {
-	userManager           *manager.UserManager
-	withdrawalManager     *manager.WithdrawalManager
-	userWithdrawalManager *manager.UserWithdrawalManager
+	userManager           userManager
+	userWithdrawalManager userWithdrawalManager
 }
 
 func NewContainer(
-	userManager *manager.UserManager,
-	withdrawalManager *manager.WithdrawalManager,
-	userWithdrawalManager *manager.UserWithdrawalManager,
+	userManager userManager,
+	userWithdrawalManager userWithdrawalManager,
 ) *Container {
 	return &Container{
 		userManager:           userManager,
-		withdrawalManager:     withdrawalManager,
 		userWithdrawalManager: userWithdrawalManager,
 	}
 }

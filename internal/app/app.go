@@ -86,7 +86,7 @@ func New(config *config.Config) (*app, error) {
 	// Router
 	authRoutes := auth.NewContainer(userManager)
 	orderRoutes := order.NewContainer(orderManager, orderQueue)
-	balanceRoutes := balance.NewContainer(userManager, withdrawalManager, userWithdrawalManager)
+	balanceRoutes := balance.NewContainer(userManager, userWithdrawalManager)
 	withdrawalRoutes := withdrawal.NewContainer(withdrawalManager)
 	router := router.New(config.AppEnv == "prod", authRoutes, orderRoutes, balanceRoutes, withdrawalRoutes, jwt)
 

@@ -21,8 +21,8 @@ func TestContainer_Login(t *testing.T) {
 		contentType   string
 		requestString string
 		request       requests.Login
-		manager       func() UserManager
-		verify        func(manager UserManager)
+		manager       func() userManager
+		verify        func(manager userManager)
 		status        int
 		token         string
 		response      *responses.Auth
@@ -35,8 +35,8 @@ func TestContainer_Login(t *testing.T) {
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
-			manager: func() UserManager {
-				manager := Mock[UserManager]()
+			manager: func() userManager {
+				manager := Mock[userManager]()
 				WhenDouble(manager.Authorize(
 					AnyContext(),
 					Exact("ivan_ivanov"),
@@ -45,7 +45,7 @@ func TestContainer_Login(t *testing.T) {
 
 				return manager
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Once()).Authorize(
 					AnyContext(),
 					Exact("ivan_ivanov"),
@@ -65,10 +65,10 @@ func TestContainer_Login(t *testing.T) {
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
-			manager: func() UserManager {
-				return Mock[UserManager]()
+			manager: func() userManager {
+				return Mock[userManager]()
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Never()).Authorize(
 					AnyContext(),
 					AnyString(),
@@ -85,10 +85,10 @@ func TestContainer_Login(t *testing.T) {
 			name:          "invalid json",
 			contentType:   "application/json",
 			requestString: "{login: ivan_ivanov, password: $uP3R$3cR3t}",
-			manager: func() UserManager {
-				return Mock[UserManager]()
+			manager: func() userManager {
+				return Mock[userManager]()
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Never()).Authorize(
 					AnyContext(),
 					AnyString(),
@@ -105,10 +105,10 @@ func TestContainer_Login(t *testing.T) {
 			name:          "invalid request",
 			contentType:   "application/json",
 			requestString: `{"username": "ivan_ivanov", "password": "$uP3R$3cR3t"}`,
-			manager: func() UserManager {
-				return Mock[UserManager]()
+			manager: func() userManager {
+				return Mock[userManager]()
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Never()).Authorize(
 					AnyContext(),
 					AnyString(),
@@ -125,10 +125,10 @@ func TestContainer_Login(t *testing.T) {
 			name:          "invalid password length",
 			contentType:   "application/json",
 			requestString: `{"login": "ivan_ivanov", "password": ""}`,
-			manager: func() UserManager {
-				return Mock[UserManager]()
+			manager: func() userManager {
+				return Mock[userManager]()
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Never()).Authorize(
 					AnyContext(),
 					AnyString(),
@@ -145,10 +145,10 @@ func TestContainer_Login(t *testing.T) {
 			name:          "invalid login length",
 			contentType:   "application/json",
 			requestString: `{"login": "", "password": "$uP3rS3cr3t"}`,
-			manager: func() UserManager {
-				return Mock[UserManager]()
+			manager: func() userManager {
+				return Mock[userManager]()
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Never()).Authorize(
 					AnyContext(),
 					AnyString(),
@@ -168,8 +168,8 @@ func TestContainer_Login(t *testing.T) {
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
-			manager: func() UserManager {
-				manager := Mock[UserManager]()
+			manager: func() userManager {
+				manager := Mock[userManager]()
 				WhenDouble(manager.Authorize(
 					AnyContext(),
 					Exact("ivan_ivanov"),
@@ -178,7 +178,7 @@ func TestContainer_Login(t *testing.T) {
 
 				return manager
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Once()).Authorize(
 					AnyContext(),
 					Exact("ivan_ivanov"),
@@ -198,8 +198,8 @@ func TestContainer_Login(t *testing.T) {
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
-			manager: func() UserManager {
-				manager := Mock[UserManager]()
+			manager: func() userManager {
+				manager := Mock[userManager]()
 				WhenDouble(manager.Authorize(
 					AnyContext(),
 					Exact("ivan_ivanov"),
@@ -208,7 +208,7 @@ func TestContainer_Login(t *testing.T) {
 
 				return manager
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Once()).Authorize(
 					AnyContext(),
 					Exact("ivan_ivanov"),

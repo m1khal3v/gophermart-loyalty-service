@@ -21,8 +21,8 @@ func TestContainer_Register(t *testing.T) {
 		contentType   string
 		requestString string
 		request       requests.Register
-		manager       func() UserManager
-		verify        func(manager UserManager)
+		manager       func() userManager
+		verify        func(manager userManager)
 		status        int
 		token         string
 		response      *responses.Auth
@@ -35,8 +35,8 @@ func TestContainer_Register(t *testing.T) {
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
-			manager: func() UserManager {
-				manager := Mock[UserManager]()
+			manager: func() userManager {
+				manager := Mock[userManager]()
 				WhenDouble(manager.Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
@@ -45,7 +45,7 @@ func TestContainer_Register(t *testing.T) {
 
 				return manager
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Once()).Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
@@ -65,10 +65,10 @@ func TestContainer_Register(t *testing.T) {
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
-			manager: func() UserManager {
-				return Mock[UserManager]()
+			manager: func() userManager {
+				return Mock[userManager]()
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Never()).Register(
 					AnyContext(),
 					AnyString(),
@@ -85,10 +85,10 @@ func TestContainer_Register(t *testing.T) {
 			name:          "invalid json",
 			contentType:   "application/json",
 			requestString: "{login: ivan_ivanov, password: $uP3R$3cR3t}",
-			manager: func() UserManager {
-				return Mock[UserManager]()
+			manager: func() userManager {
+				return Mock[userManager]()
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Never()).Register(
 					AnyContext(),
 					AnyString(),
@@ -105,10 +105,10 @@ func TestContainer_Register(t *testing.T) {
 			name:          "invalid request",
 			contentType:   "application/json",
 			requestString: `{"username": "ivan_ivanov", "password": "$uP3R$3cR3t"}`,
-			manager: func() UserManager {
-				return Mock[UserManager]()
+			manager: func() userManager {
+				return Mock[userManager]()
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Never()).Register(
 					AnyContext(),
 					AnyString(),
@@ -125,10 +125,10 @@ func TestContainer_Register(t *testing.T) {
 			name:          "invalid password length",
 			contentType:   "application/json",
 			requestString: `{"login": "ivan_ivanov", "password": "$uP3"}`,
-			manager: func() UserManager {
-				return Mock[UserManager]()
+			manager: func() userManager {
+				return Mock[userManager]()
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Never()).Register(
 					AnyContext(),
 					AnyString(),
@@ -145,10 +145,10 @@ func TestContainer_Register(t *testing.T) {
 			name:          "invalid login length",
 			contentType:   "application/json",
 			requestString: `{"login": "ok", "password": "$uP3rS3cr3t"}`,
-			manager: func() UserManager {
-				return Mock[UserManager]()
+			manager: func() userManager {
+				return Mock[userManager]()
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Never()).Register(
 					AnyContext(),
 					AnyString(),
@@ -165,10 +165,10 @@ func TestContainer_Register(t *testing.T) {
 			name:          "invalid login symbol",
 			contentType:   "application/json",
 			requestString: `{"login": "ivan=ivanov", "password": "$uP3rS3cr3t"}`,
-			manager: func() UserManager {
-				return Mock[UserManager]()
+			manager: func() userManager {
+				return Mock[userManager]()
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Never()).Register(
 					AnyContext(),
 					AnyString(),
@@ -188,8 +188,8 @@ func TestContainer_Register(t *testing.T) {
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
-			manager: func() UserManager {
-				manager := Mock[UserManager]()
+			manager: func() userManager {
+				manager := Mock[userManager]()
 				WhenDouble(manager.Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
@@ -198,7 +198,7 @@ func TestContainer_Register(t *testing.T) {
 
 				return manager
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Once()).Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
@@ -218,8 +218,8 @@ func TestContainer_Register(t *testing.T) {
 				Login:    "ivan_ivanov",
 				Password: "$uP3R$3cR3t",
 			},
-			manager: func() UserManager {
-				manager := Mock[UserManager]()
+			manager: func() userManager {
+				manager := Mock[userManager]()
 				WhenDouble(manager.Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
@@ -228,7 +228,7 @@ func TestContainer_Register(t *testing.T) {
 
 				return manager
 			},
-			verify: func(manager UserManager) {
+			verify: func(manager userManager) {
 				Verify(manager, Once()).Register(
 					AnyContext(),
 					Exact("ivan_ivanov"),
@@ -258,7 +258,7 @@ func TestContainer_Register(t *testing.T) {
 				requestBody = bytes.NewBuffer(jsonRequest)
 			}
 
-			request := httptest.NewRequest(http.MethodPost, "/api/user/login", requestBody)
+			request := httptest.NewRequest(http.MethodPost, "/api/user/register", requestBody)
 			request.Header.Set("Content-Type", tt.contentType)
 
 			container.Register(recorder, request)
