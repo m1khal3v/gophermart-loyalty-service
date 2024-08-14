@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 )
 
@@ -23,7 +24,7 @@ func TestContainer_Register(t *testing.T) {
 		name            string
 		ctx             context.Context
 		contentType     string
-		requestBody     string
+		orderID         uint64
 		manager         func() orderManager
 		verify          func(manager orderManager)
 		status          int
@@ -34,7 +35,7 @@ func TestContainer_Register(t *testing.T) {
 			name:        "valid order",
 			ctx:         userContext.WithUserID(context.Background(), 123),
 			contentType: "text/plain",
-			requestBody: "1234566",
+			orderID:     1234566,
 			manager: func() orderManager {
 				manager := Mock[orderManager]()
 				WhenDouble(manager.Register(
@@ -65,7 +66,7 @@ func TestContainer_Register(t *testing.T) {
 			name:        "order already registered by current user",
 			ctx:         userContext.WithUserID(context.Background(), 123),
 			contentType: "text/plain",
-			requestBody: "1234566",
+			orderID:     1234566,
 			manager: func() orderManager {
 				manager := Mock[orderManager]()
 				WhenDouble(manager.Register(
@@ -96,7 +97,7 @@ func TestContainer_Register(t *testing.T) {
 			name:        "order already registered by another user",
 			ctx:         userContext.WithUserID(context.Background(), 123),
 			contentType: "text/plain",
-			requestBody: "1234566",
+			orderID:     1234566,
 			manager: func() orderManager {
 				manager := Mock[orderManager]()
 				WhenDouble(manager.Register(
@@ -128,7 +129,7 @@ func TestContainer_Register(t *testing.T) {
 			name:        "cant register order",
 			ctx:         userContext.WithUserID(context.Background(), 123),
 			contentType: "text/plain",
-			requestBody: "1234566",
+			orderID:     1234566,
 			manager: func() orderManager {
 				manager := Mock[orderManager]()
 				WhenDouble(manager.Register(
@@ -160,7 +161,7 @@ func TestContainer_Register(t *testing.T) {
 			name:        "invalid content-type",
 			ctx:         userContext.WithUserID(context.Background(), 123),
 			contentType: "application/json",
-			requestBody: "1234566",
+			orderID:     1234566,
 			manager: func() orderManager {
 				return Mock[orderManager]()
 			},
@@ -181,7 +182,7 @@ func TestContainer_Register(t *testing.T) {
 			name:        "invalid order id",
 			ctx:         userContext.WithUserID(context.Background(), 123),
 			contentType: "text/plain",
-			requestBody: "123456",
+			orderID:     123456,
 			manager: func() orderManager {
 				return Mock[orderManager]()
 			},
@@ -223,10 +224,11 @@ func TestContainer_Register(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			SetUp(t)
 			manager := tt.manager()
-			container := NewContainer(manager, queue.New[uint64](1))
+			queue := queue.New[uint64](1)
+			container := NewContainer(manager, queue)
 			recorder := httptest.NewRecorder()
 
-			request := httptest.NewRequest(http.MethodGet, "/api/user/balance", bytes.NewBuffer([]byte(tt.requestBody))).WithContext(tt.ctx)
+			request := httptest.NewRequest(http.MethodGet, "/api/user/balance", bytes.NewBuffer([]byte(strconv.FormatUint(tt.orderID, 10)))).WithContext(tt.ctx)
 			request.Header.Set("Content-Type", tt.contentType)
 
 			container.Register(recorder, request)
@@ -243,6 +245,14 @@ func TestContainer_Register(t *testing.T) {
 				response := &responses.Message{}
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), response))
 				assert.Equal(t, tt.messageResponse, response)
+			}
+
+			if tt.status == http.StatusAccepted {
+				orderID, ok := queue.Pop()
+				require.True(t, ok)
+				assert.Equal(t, tt.orderID, orderID)
+				_, ok = queue.Pop()
+				require.False(t, ok)
 			}
 
 			tt.verify(manager)
