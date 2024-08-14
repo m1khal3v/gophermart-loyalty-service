@@ -19,7 +19,7 @@ func NewOrderRepository(db *gorm.DB) *OrderRepository {
 }
 
 func (repository *OrderRepository) CreateOrFind(ctx context.Context, order *entity.Order) (*entity.Order, bool, error) {
-	return repository.CreateOrFind(ctx, order)
+	return repository.Repository.CreateOrFind(ctx, order)
 }
 
 func (repository *OrderRepository) FindOneByUserID(ctx context.Context, userID uint32) (*entity.Order, error) {
