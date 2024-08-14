@@ -40,6 +40,40 @@ func (repository *Repository[T]) FindOneBy(ctx context.Context, condition any, a
 	return entity, nil
 }
 
+func (repository *Repository[T]) FindOneByPrimaryKey(ctx context.Context, entity *T) (*T, error) {
+	result := repository.db.
+		WithContext(ctx).
+		Limit(1).
+		Take(entity)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, result.Error
+	}
+
+	return entity, nil
+}
+
+func (repository *Repository[T]) CreateOrFind(ctx context.Context, entity *T) (*T, bool, error) {
+	if err := repository.Create(ctx, entity); err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			entity, err := repository.FindOneByPrimaryKey(ctx, entity)
+			if err != nil {
+				return nil, false, err
+			}
+
+			return entity, false, nil
+		}
+
+		return nil, false, err
+	}
+
+	return entity, true, nil
+}
+
 func (repository *Repository[T]) FindBy(ctx context.Context, order, condition any, args ...any) (<-chan *T, error) {
 	result, err := repository.findModelBy(ctx, new(T), order, condition, args...)
 	if err != nil {

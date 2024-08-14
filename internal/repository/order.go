@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/repository"
 	"gorm.io/gorm"
@@ -20,20 +19,7 @@ func NewOrderRepository(db *gorm.DB) *OrderRepository {
 }
 
 func (repository *OrderRepository) CreateOrFind(ctx context.Context, order *entity.Order) (*entity.Order, bool, error) {
-	if err := repository.Create(ctx, order); err != nil {
-		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			order, err := repository.FindOneBy(ctx, "id = ?", order.ID)
-			if err != nil {
-				return nil, false, err
-			}
-
-			return order, false, nil
-		}
-
-		return nil, false, err
-	}
-
-	return order, true, nil
+	return repository.CreateOrFind(ctx, order)
 }
 
 func (repository *OrderRepository) FindOneByUserID(ctx context.Context, userID uint32) (*entity.Order, error) {

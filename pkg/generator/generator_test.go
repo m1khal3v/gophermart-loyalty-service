@@ -2,7 +2,6 @@ package generator
 
 import (
 	"context"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
@@ -275,7 +274,6 @@ func TestNewFromMapOnlyValueWithContextClose(t *testing.T) {
 	}
 
 	assert.Len(t, items, 6)
-	fmt.Println(items)
 	for _, item := range items {
 		assert.Contains(t, []int{2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, item)
 	}
