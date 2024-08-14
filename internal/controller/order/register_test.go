@@ -228,7 +228,7 @@ func TestContainer_Register(t *testing.T) {
 			container := NewContainer(manager, queue)
 			recorder := httptest.NewRecorder()
 
-			request := httptest.NewRequest(http.MethodGet, "/api/user/balance", bytes.NewBuffer([]byte(strconv.FormatUint(tt.orderID, 10)))).WithContext(tt.ctx)
+			request := httptest.NewRequest(http.MethodPost, "/api/user/order", bytes.NewBuffer([]byte(strconv.FormatUint(tt.orderID, 10)))).WithContext(tt.ctx)
 			request.Header.Set("Content-Type", tt.contentType)
 
 			container.Register(recorder, request)

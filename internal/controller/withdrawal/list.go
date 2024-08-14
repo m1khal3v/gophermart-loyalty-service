@@ -27,13 +27,13 @@ func (container *Container) List(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	orders, err := container.manager.FindByUser(request.Context(), userID)
+	withdrawals, err := container.manager.FindByUser(request.Context(), userID)
 	if err != nil {
 		controller.WriteJSONErrorResponse(http.StatusInternalServerError, writer, "can`t get user withdrawals", err)
 		return
 	}
 
-	if err := controller.StreamJSONResponse(http.StatusOK, orders, func(item *entity.Withdrawal) any {
+	if err := controller.StreamJSONResponse(http.StatusOK, withdrawals, func(item *entity.Withdrawal) any {
 		return responses.Withdrawal{
 			Order:       item.OrderID,
 			Sum:         item.Sum.AsFloat(),

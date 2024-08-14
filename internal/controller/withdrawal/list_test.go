@@ -1,4 +1,4 @@
-package order
+package withdrawal
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	userContext "github.com/m1khal3v/gophermart-loyalty-service/internal/context"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/responses"
 	. "github.com/ovechkin-dm/mockio/mock"
 	"github.com/stretchr/testify/assert"
@@ -19,48 +18,31 @@ import (
 )
 
 func TestContainer_List(t *testing.T) {
-	accrual := 1.23
 	tests := []struct {
 		name            string
 		ctx             context.Context
-		manager         func() orderManager
-		verify          func(manager orderManager)
+		manager         func() withdrawalManager
+		verify          func(manager withdrawalManager)
 		status          int
-		listResponse    []responses.Order
+		listResponse    []responses.Withdrawal
 		messageResponse *responses.Message
 		errResponse     *responses.APIError
 	}{
 		{
-			name: "valid orders",
+			name: "valid withdrawals",
 			ctx:  userContext.WithUserID(context.Background(), 123),
-			manager: func() orderManager {
-				channel := make(chan *entity.Order, 4)
+			manager: func() withdrawalManager {
+				channel := make(chan *entity.Withdrawal, 4)
 				for i := 1; i <= 4; i++ {
-					var status string
-					switch i {
-					case 1:
-						status = entity.OrderStatusNew
-					case 2:
-						status = entity.OrderStatusProcessing
-					case 3:
-						status = entity.OrderStatusInvalid
-					case 4:
-						status = entity.OrderStatusProcessed
-					}
-					order := &entity.Order{
-						ID:        uint64(i),
+					channel <- &entity.Withdrawal{
+						OrderID:   uint64(i),
 						UserID:    123,
-						Status:    status,
+						Sum:       money.New(float64(i) * 1.11),
 						CreatedAt: time.Now().Round(time.Duration(i) * time.Minute),
-						UpdatedAt: time.Now().Round(time.Duration(i) * time.Minute),
 					}
-					if status == entity.OrderStatusProcessed {
-						order.Accrual = money.New(accrual)
-					}
-					channel <- order
 				}
 				close(channel)
-				manager := Mock[orderManager]()
+				manager := Mock[withdrawalManager]()
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
@@ -72,7 +54,7 @@ func TestContainer_List(t *testing.T) {
 
 				return manager
 			},
-			verify: func(manager orderManager) {
+			verify: func(manager withdrawalManager) {
 				Verify(manager, Once()).HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
@@ -83,35 +65,34 @@ func TestContainer_List(t *testing.T) {
 				)
 			},
 			status: http.StatusOK,
-			listResponse: []responses.Order{
+			listResponse: []responses.Withdrawal{
 				{
-					Number:     1,
-					Status:     entity.OrderStatusNew,
-					UploadedAt: time.Now().Round(time.Minute),
+					Order:       1,
+					Sum:         1.11,
+					ProcessedAt: time.Now().Round(time.Minute),
 				},
 				{
-					Number:     2,
-					Status:     entity.OrderStatusProcessing,
-					UploadedAt: time.Now().Round(2 * time.Minute),
+					Order:       2,
+					Sum:         2.22,
+					ProcessedAt: time.Now().Round(2 * time.Minute),
 				},
 				{
-					Number:     3,
-					Status:     entity.OrderStatusInvalid,
-					UploadedAt: time.Now().Round(3 * time.Minute),
+					Order:       3,
+					Sum:         3.33,
+					ProcessedAt: time.Now().Round(3 * time.Minute),
 				},
 				{
-					Number:     4,
-					Status:     entity.OrderStatusProcessed,
-					Accrual:    &accrual,
-					UploadedAt: time.Now().Round(4 * time.Minute),
+					Order:       4,
+					Sum:         4.44,
+					ProcessedAt: time.Now().Round(4 * time.Minute),
 				},
 			},
 		},
 		{
-			name: "no orders",
+			name: "no withdrawals",
 			ctx:  userContext.WithUserID(context.Background(), 123),
-			manager: func() orderManager {
-				manager := Mock[orderManager]()
+			manager: func() withdrawalManager {
+				manager := Mock[withdrawalManager]()
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
@@ -119,7 +100,7 @@ func TestContainer_List(t *testing.T) {
 
 				return manager
 			},
-			verify: func(manager orderManager) {
+			verify: func(manager withdrawalManager) {
 				Verify(manager, Once()).HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
@@ -131,16 +112,16 @@ func TestContainer_List(t *testing.T) {
 			},
 			status: http.StatusNoContent,
 			messageResponse: &responses.Message{
-				Message: "orders not found",
+				Message: "withdrawals not found",
 			},
 		},
 		{
 			name: "cant get credentials",
 			ctx:  context.Background(),
-			manager: func() orderManager {
-				return Mock[orderManager]()
+			manager: func() withdrawalManager {
+				return Mock[withdrawalManager]()
 			},
-			verify: func(manager orderManager) {
+			verify: func(manager withdrawalManager) {
 				Verify(manager, Never()).HasUser(
 					AnyContext(),
 					Any[uint32](),
@@ -157,10 +138,10 @@ func TestContainer_List(t *testing.T) {
 			},
 		},
 		{
-			name: "cant check user has orders",
+			name: "cant check user has withdrawals",
 			ctx:  userContext.WithUserID(context.Background(), 123),
-			manager: func() orderManager {
-				manager := Mock[orderManager]()
+			manager: func() withdrawalManager {
+				manager := Mock[withdrawalManager]()
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
@@ -168,7 +149,7 @@ func TestContainer_List(t *testing.T) {
 
 				return manager
 			},
-			verify: func(manager orderManager) {
+			verify: func(manager withdrawalManager) {
 				Verify(manager, Once()).HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
@@ -181,14 +162,14 @@ func TestContainer_List(t *testing.T) {
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
 				Code:    http.StatusInternalServerError,
-				Message: "can`t check that user has orders",
+				Message: "can`t check that user has withdrawals",
 			},
 		},
 		{
-			name: "cant get user orders",
+			name: "cant get user withdrawals",
 			ctx:  userContext.WithUserID(context.Background(), 123),
-			manager: func() orderManager {
-				manager := Mock[orderManager]()
+			manager: func() withdrawalManager {
+				manager := Mock[withdrawalManager]()
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
@@ -200,7 +181,7 @@ func TestContainer_List(t *testing.T) {
 
 				return manager
 			},
-			verify: func(manager orderManager) {
+			verify: func(manager withdrawalManager) {
 				Verify(manager, Once()).HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
@@ -213,7 +194,7 @@ func TestContainer_List(t *testing.T) {
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
 				Code:    http.StatusInternalServerError,
-				Message: "can`t get user orders",
+				Message: "can`t get user withdrawals",
 			},
 		},
 	}
@@ -221,17 +202,17 @@ func TestContainer_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			SetUp(t)
 			manager := tt.manager()
-			container := NewContainer(manager, queue.New[uint64](1))
+			container := NewContainer(manager)
 			recorder := httptest.NewRecorder()
 
-			request := httptest.NewRequest(http.MethodGet, "/api/user/order", nil).WithContext(tt.ctx)
+			request := httptest.NewRequest(http.MethodGet, "/api/user/withdrawal", nil).WithContext(tt.ctx)
 
 			container.List(recorder, request)
 
 			require.Equal(t, tt.status, recorder.Code)
 
 			if tt.listResponse != nil {
-				response := []responses.Order{}
+				response := []responses.Withdrawal{}
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
 				assert.Equal(t, tt.listResponse, response)
 			}
