@@ -251,9 +251,10 @@ func TestContainer_Register(t *testing.T) {
 				orderID, ok := queue.Pop()
 				require.True(t, ok)
 				assert.Equal(t, tt.orderID, orderID)
-				_, ok = queue.Pop()
-				require.False(t, ok)
 			}
+
+			_, ok := queue.Pop()
+			require.False(t, ok)
 
 			tt.verify(manager)
 		})
