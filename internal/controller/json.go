@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/asaskevich/govalidator"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/responses"
@@ -29,40 +28,6 @@ func DecodeAndValidateJSONRequest[T any](request *http.Request, writer http.Resp
 	}
 
 	return target, true
-}
-
-func DecodeAndValidateJSONRequests[T any](request *http.Request, writer http.ResponseWriter) ([]*T, bool) {
-	if request.Header.Get("Content-Type") != "application/json" {
-		WriteJSONErrorResponse(http.StatusBadRequest, writer, "Invalid Content-Type", nil)
-		return nil, false
-	}
-
-	targets := make([]*T, 0)
-
-	if err := json.NewDecoder(request.Body).Decode(&targets); err != nil {
-		WriteJSONErrorResponse(http.StatusBadRequest, writer, "Invalid json received", err)
-		return nil, false
-	}
-
-	if len(targets) == 0 {
-		WriteJSONErrorResponse(http.StatusBadRequest, writer, "Empty request received", nil)
-		return nil, false
-	}
-
-	var errs []error
-	for _, target := range targets {
-		if _, err := govalidator.ValidateStruct(target); err != nil {
-			errs = append(errs, err)
-			continue
-		}
-	}
-
-	if len(errs) > 0 {
-		WriteJSONErrorResponse(http.StatusBadRequest, writer, "Invalid request received", errors.Join(errs...))
-		return nil, false
-	}
-
-	return targets, true
 }
 
 func WriteJSONResponse(status int, response any, writer http.ResponseWriter) {
