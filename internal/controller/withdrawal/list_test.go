@@ -38,7 +38,7 @@ func TestContainer_List(t *testing.T) {
 						OrderID:   uint64(i),
 						UserID:    123,
 						Sum:       money.New(float64(i) * 1.11),
-						CreatedAt: time.Now().Round(time.Duration(i) * time.Minute),
+						CreatedAt: time.Unix(int64(i), int64(i)),
 					}
 				}
 				close(channel)
@@ -69,22 +69,22 @@ func TestContainer_List(t *testing.T) {
 				{
 					Order:       1,
 					Sum:         1.11,
-					ProcessedAt: time.Now().Round(time.Minute),
+					ProcessedAt: time.Unix(1, 1),
 				},
 				{
 					Order:       2,
 					Sum:         2.22,
-					ProcessedAt: time.Now().Round(2 * time.Minute),
+					ProcessedAt: time.Unix(2, 2),
 				},
 				{
 					Order:       3,
 					Sum:         3.33,
-					ProcessedAt: time.Now().Round(3 * time.Minute),
+					ProcessedAt: time.Unix(3, 3),
 				},
 				{
 					Order:       4,
 					Sum:         4.44,
-					ProcessedAt: time.Now().Round(4 * time.Minute),
+					ProcessedAt: time.Unix(4, 4),
 				},
 			},
 		},

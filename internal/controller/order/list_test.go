@@ -51,8 +51,7 @@ func TestContainer_List(t *testing.T) {
 						ID:        uint64(i),
 						UserID:    123,
 						Status:    status,
-						CreatedAt: time.Now().Round(time.Duration(i) * time.Minute),
-						UpdatedAt: time.Now().Round(time.Duration(i) * time.Minute),
+						CreatedAt: time.Unix(int64(i), int64(i)),
 					}
 					if status == entity.OrderStatusProcessed {
 						order.Accrual = money.New(accrual)
@@ -87,23 +86,23 @@ func TestContainer_List(t *testing.T) {
 				{
 					Number:     1,
 					Status:     entity.OrderStatusNew,
-					UploadedAt: time.Now().Round(time.Minute),
+					UploadedAt: time.Unix(1, 1),
 				},
 				{
 					Number:     2,
 					Status:     entity.OrderStatusProcessing,
-					UploadedAt: time.Now().Round(2 * time.Minute),
+					UploadedAt: time.Unix(2, 2),
 				},
 				{
 					Number:     3,
 					Status:     entity.OrderStatusInvalid,
-					UploadedAt: time.Now().Round(3 * time.Minute),
+					UploadedAt: time.Unix(3, 3),
 				},
 				{
 					Number:     4,
 					Status:     entity.OrderStatusProcessed,
 					Accrual:    &accrual,
-					UploadedAt: time.Now().Round(4 * time.Minute),
+					UploadedAt: time.Unix(4, 4),
 				},
 			},
 		},
