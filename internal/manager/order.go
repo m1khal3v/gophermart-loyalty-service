@@ -4,18 +4,24 @@ import (
 	"context"
 	"errors"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 	"gorm.io/gorm"
 )
 
 var ErrOrderAlreadyRegisteredByCurrentUser = errors.New("order already registered by current user")
 var ErrOrderAlreadyRegisteredByAnotherUser = errors.New("order already registered by another user")
 
-type OrderManager struct {
-	orderRepository *repository.OrderRepository
+type orderRepository interface {
+	CreateOrFind(ctx context.Context, order *entity.Order) (*entity.Order, bool, error)
+	FindOneByUserID(ctx context.Context, userID uint32) (*entity.Order, error)
+	FindByUserID(ctx context.Context, userID uint32) (<-chan *entity.Order, error)
+	UpdateStatus(ctx context.Context, ids []uint64, status string) error
 }
 
-func NewOrderManager(orderRepository *repository.OrderRepository) *OrderManager {
+type OrderManager struct {
+	orderRepository orderRepository
+}
+
+func NewOrderManager(orderRepository orderRepository) *OrderManager {
 	return &OrderManager{
 		orderRepository: orderRepository,
 	}
@@ -40,7 +46,7 @@ func (manager *OrderManager) Register(ctx context.Context, id uint64, userID uin
 		return order, ErrOrderAlreadyRegisteredByCurrentUser
 	}
 
-	return order, ErrOrderAlreadyRegisteredByAnotherUser
+	return nil, ErrOrderAlreadyRegisteredByAnotherUser
 }
 
 func (manager *OrderManager) FindByUser(ctx context.Context, userID uint32) (<-chan *entity.Order, error) {
