@@ -6,7 +6,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"math"
-	"strconv"
 )
 
 const precision = 2
@@ -45,8 +44,8 @@ func (amount *Amount) Scan(value any) error {
 func (amount Amount) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	return clause.Expr{
 		SQL: "?",
-		Vars: []interface{}{
-			strconv.FormatUint(uint64(amount), 10),
+		Vars: []any{
+			uint64(amount),
 		},
 	}
 }
