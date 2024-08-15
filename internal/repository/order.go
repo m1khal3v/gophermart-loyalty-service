@@ -35,7 +35,10 @@ func (repository *OrderRepository) FindByID(ctx context.Context, id uint64) (*en
 }
 
 func (repository *OrderRepository) FindUnprocessedIDs(ctx context.Context) (<-chan uint64, error) {
-	return repository.FindIDsBy(ctx, "created_at ASC", "status IN (?)", entity.OrderStatusNew, entity.OrderStatusProcessing)
+	return repository.FindIDsBy(ctx, "created_at ASC", "status IN (?)", []string{
+		entity.OrderStatusNew,
+		entity.OrderStatusProcessing,
+	})
 }
 
 func (repository *OrderRepository) UpdateStatus(ctx context.Context, ids []uint64, status string) error {
