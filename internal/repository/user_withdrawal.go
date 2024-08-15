@@ -18,27 +18,29 @@ func NewUserWithdrawalRepository(db *gorm.DB) *UserWithdrawalRepository {
 }
 
 func (userWithdrawalRepository *UserWithdrawalRepository) Withdraw(ctx context.Context, orderID uint64, userID uint32, sum float64) (*entity.Withdrawal, error) {
-	tx := userWithdrawalRepository.db.Begin()
-	withdrawalRepository := NewWithdrawalRepository(tx)
-	userRepository := NewUserRepository(tx)
-
 	withdrawal := &entity.Withdrawal{
 		OrderID: orderID,
 		UserID:  userID,
 		Sum:     money.New(sum),
 	}
 
-	if err := withdrawalRepository.Create(ctx, withdrawal); err != nil {
-		tx.Rollback()
+	err := userWithdrawalRepository.db.Transaction(func(transaction *gorm.DB) error {
+		withdrawalRepository := NewWithdrawalRepository(transaction)
+		userRepository := NewUserRepository(transaction)
+
+		if err := withdrawalRepository.Create(ctx, withdrawal); err != nil {
+			return err
+		}
+
+		if ok, err := userRepository.Withdraw(ctx, userID, sum); err != nil || !ok {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
-
-	if ok, err := userRepository.Withdraw(ctx, userID, sum); err != nil || !ok {
-		tx.Rollback()
-		return nil, err
-	}
-
-	tx.Commit()
 
 	return withdrawal, nil
 }
