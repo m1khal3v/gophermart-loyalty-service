@@ -25,7 +25,7 @@ func (repository *Repository[T]) FindOneBy(ctx context.Context, condition any, a
 
 	result := repository.db.
 		WithContext(ctx).
-		Where(condition, args).
+		Where(condition, args...).
 		Limit(1).
 		Take(entity)
 
@@ -128,7 +128,7 @@ func (repository *Repository[T]) findModelBy(ctx context.Context, model, order, 
 	return repository.db.
 		WithContext(ctx).
 		Model(model).
-		Where(condition, args).
+		Where(condition, args...).
 		Order(order).
 		Rows()
 }
@@ -140,14 +140,14 @@ func (repository *Repository[T]) Save(ctx context.Context, entity *T) error {
 func (repository *Repository[T]) UpdateOmitZero(ctx context.Context, model *T, update *T, where any, args ...any) error {
 	base := repository.db.WithContext(ctx).Model(model)
 	if where != nil {
-		base.Where(where, args)
+		base.Where(where, args...)
 	}
 
 	return base.Updates(update).Error
 }
 
 func (repository *Repository[T]) Updates(ctx context.Context, model *T, updates any, where any, args ...any) (int64, error) {
-	result := repository.db.WithContext(ctx).Model(model).Where(where, args).Updates(updates)
+	result := repository.db.WithContext(ctx).Model(model).Where(where, args...).Updates(updates)
 
 	if result.Error != nil {
 		return 0, result.Error
