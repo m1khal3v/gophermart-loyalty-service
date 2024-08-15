@@ -145,3 +145,13 @@ func (repository *Repository[T]) UpdateOmitZero(ctx context.Context, model *T, u
 
 	return base.Updates(update).Error
 }
+
+func (repository *Repository[T]) Updates(ctx context.Context, model *T, updates any, where any, args ...any) (int64, error) {
+	result := repository.db.WithContext(ctx).Model(model).Where(where, args).Updates(updates)
+
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return result.RowsAffected, nil
+}

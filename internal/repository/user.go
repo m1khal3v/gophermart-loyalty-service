@@ -10,13 +10,11 @@ import (
 
 type UserRepository struct {
 	*repository.Repository[entity.User]
-	db *gorm.DB
 }
 
 func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{
 		Repository: repository.New[entity.User](db),
-		db:         db,
 	}
 }
 
@@ -29,28 +27,28 @@ func (repository *UserRepository) FindOneByID(ctx context.Context, id uint32) (*
 }
 
 func (repository *UserRepository) Withdraw(ctx context.Context, id uint32, sum float64) (bool, error) {
-	uintSum := uint64(money.New(sum))
-	result := repository.db.WithContext(ctx).Model(&entity.User{}).Where("id = ? AND balance >= ?", id, uintSum).Updates(map[string]interface{}{
-		"balance":   gorm.Expr("balance - ?", uintSum),
-		"withdrawn": gorm.Expr("withdrawn + ?", uintSum),
-	})
+	money := money.New(sum)
+	affected, err := repository.Updates(ctx, &entity.User{}, map[string]interface{}{
+		"balance":   gorm.Expr("balance - ?", money),
+		"withdrawn": gorm.Expr("withdrawn + ?", money),
+	}, "id = ? AND balance >= ?", id, money)
 
-	if result.Error != nil {
-		return false, result.Error
+	if err != nil {
+		return false, err
 	}
 
-	return result.RowsAffected == 1, nil
+	return affected == 1, nil
 }
 
 func (repository *UserRepository) Accrue(ctx context.Context, id uint32, sum float64) (bool, error) {
-	uintSum := uint64(money.New(sum))
-	result := repository.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Updates(map[string]interface{}{
-		"balance": gorm.Expr("balance + ?", uintSum),
-	})
+	money := money.New(sum)
+	affected, err := repository.Updates(ctx, &entity.User{}, map[string]interface{}{
+		"balance": gorm.Expr("balance + ?", money),
+	}, "id = ?", id)
 
-	if result.Error != nil {
-		return false, result.Error
+	if err != nil {
+		return false, err
 	}
 
-	return result.RowsAffected == 1, nil
+	return affected == 1, nil
 }
