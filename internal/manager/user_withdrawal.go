@@ -3,16 +3,20 @@ package manager
 import (
 	"context"
 	"errors"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 )
 
 var ErrInsufficientFunds = errors.New("insufficient funds")
 
-type UserWithdrawalManager struct {
-	userWithdrawalRepository *repository.UserWithdrawalRepository
+type userWithdrawalRepository interface {
+	Withdraw(ctx context.Context, orderID uint64, userID uint32, sum float64) (*entity.Withdrawal, error)
 }
 
-func NewUserWithdrawalManager(userWithdrawalRepository *repository.UserWithdrawalRepository) *UserWithdrawalManager {
+type UserWithdrawalManager struct {
+	userWithdrawalRepository userWithdrawalRepository
+}
+
+func NewUserWithdrawalManager(userWithdrawalRepository userWithdrawalRepository) *UserWithdrawalManager {
 	return &UserWithdrawalManager{
 		userWithdrawalRepository: userWithdrawalRepository,
 	}
