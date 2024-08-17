@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/bcrypt"
 	"gorm.io/gorm"
 )
@@ -13,12 +12,18 @@ import (
 var ErrLoginAlreadyExists = errors.New("login already exists")
 var ErrInvalidCredentials = errors.New("invalid credentials")
 
+type userRepository interface {
+	Create(ctx context.Context, entity *entity.User) error
+	FindOneByLogin(ctx context.Context, login string) (*entity.User, error)
+	FindOneByID(ctx context.Context, id uint32) (*entity.User, error)
+}
+
 type UserManager struct {
-	userRepository *repository.UserRepository
+	userRepository userRepository
 	jwt            *jwt.Container
 }
 
-func NewUserManager(userRepository *repository.UserRepository, jwt *jwt.Container) *UserManager {
+func NewUserManager(userRepository userRepository, jwt *jwt.Container) *UserManager {
 	return &UserManager{
 		userRepository: userRepository,
 		jwt:            jwt,

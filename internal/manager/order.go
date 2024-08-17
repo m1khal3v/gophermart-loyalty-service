@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
-	"gorm.io/gorm"
 )
 
 var ErrOrderAlreadyRegisteredByCurrentUser = errors.New("order already registered by current user")
@@ -54,15 +53,12 @@ func (manager *OrderManager) FindByUser(ctx context.Context, userID uint32) (<-c
 }
 
 func (manager *OrderManager) HasUser(ctx context.Context, userID uint32) (bool, error) {
-	if _, err := manager.orderRepository.FindOneByUserID(ctx, userID); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, nil
-		}
-
+	order, err := manager.orderRepository.FindOneByUserID(ctx, userID)
+	if err != nil {
 		return false, err
 	}
 
-	return true, nil
+	return order != nil, nil
 }
 
 func (manager *OrderManager) UpdateStatus(ctx context.Context, ids []uint64, status string) error {

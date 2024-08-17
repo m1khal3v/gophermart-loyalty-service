@@ -8,7 +8,7 @@ import (
 
 // RecommendedCost must be >= 12
 // See IETF article https://www.ietf.org/archive/id/draft-ietf-kitten-password-storage-07.html#name-bcrypt
-const RecommendedCost = 14
+const RecommendedCost = 12
 
 type ErrUnsupportedDBValue struct {
 	Value any

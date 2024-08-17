@@ -7,7 +7,6 @@ import (
 	. "github.com/ovechkin-dm/mockio/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 	"testing"
 )
 
@@ -201,7 +200,7 @@ func TestOrderManager_HasUser(t *testing.T) {
 				WhenDouble(repository.FindOneByUserID(
 					AnyContext(),
 					Exact[uint32](2),
-				)).ThenReturn(nil, gorm.ErrRecordNotFound)
+				)).ThenReturn(nil, nil)
 
 				return repository
 			},
