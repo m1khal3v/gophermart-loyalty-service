@@ -3,14 +3,18 @@ package manager
 import (
 	"context"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 )
 
-type WithdrawalManager struct {
-	withdrawalRepository *repository.WithdrawalRepository
+type withdrawalRepository interface {
+	FindOneByUserID(ctx context.Context, userID uint32) (*entity.Withdrawal, error)
+	FindByUserID(ctx context.Context, userID uint32) (<-chan *entity.Withdrawal, error)
 }
 
-func NewWithdrawalManager(withdrawalRepository *repository.WithdrawalRepository) *WithdrawalManager {
+type WithdrawalManager struct {
+	withdrawalRepository withdrawalRepository
+}
+
+func NewWithdrawalManager(withdrawalRepository withdrawalRepository) *WithdrawalManager {
 	return &WithdrawalManager{
 		withdrawalRepository: withdrawalRepository,
 	}
