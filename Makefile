@@ -13,6 +13,12 @@ logs:
 migrate:
 	docker compose run --rm goose
 
+test:
+	docker compose run --rm --no-deps service go test -v ./...
+
+test-race:
+	docker compose run --rm --no-deps service go test -v -race ./...
+
 diff:
 	docker compose -f atlas.yml build && \
 	docker compose -f atlas.yml run --rm atlas migrate hash --env gorm && \
