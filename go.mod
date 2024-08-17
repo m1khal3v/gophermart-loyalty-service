@@ -4,6 +4,7 @@ go 1.22.5
 
 require (
 	ariga.io/atlas-provider-gorm v0.5.0
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/go-chi/chi/v5 v5.1.0
