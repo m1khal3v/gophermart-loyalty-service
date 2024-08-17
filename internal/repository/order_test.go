@@ -14,15 +14,18 @@ import (
 )
 
 func TestOrderRepository_FindOneByUserID(t *testing.T) {
-	gorm, sqlmock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := repositorytest.NewDBMock(t)
 	repository := NewOrderRepository(gorm)
 	id := rand.Uint64N(1000) + 1
 	userID := rand.Uint32N(1000) + 1
 	accrual := rand.Uint64N(1000) + 100
-	rows := sqlmock.
+	rows := sqlMock.
 		NewRows([]string{"id", "user_id", "status", "accrual", "created_at", "updated_at"}).
 		AddRow(int64(id), int32(userID), "TEST_STATUS", int64(accrual), time.Now(), time.Now())
-	sqlmock.ExpectQuery(`SELECT * FROM "orders" WHERE user_id = $1 LIMIT $2`).WillReturnRows(rows)
+	sqlMock.
+		ExpectQuery(`SELECT * FROM "orders" WHERE user_id = $1 LIMIT $2`).
+		WithArgs(userID, 1).
+		WillReturnRows(rows)
 
 	order, err := repository.FindOneByUserID(context.Background(), userID)
 	require.NoError(t, err)
@@ -33,16 +36,19 @@ func TestOrderRepository_FindOneByUserID(t *testing.T) {
 }
 
 func TestOrderRepository_FindByUserID(t *testing.T) {
-	gorm, sqlmock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := repositorytest.NewDBMock(t)
 	repository := NewOrderRepository(gorm)
 	id := rand.Uint64N(1000) + 1
 	userID := rand.Uint32N(1000) + 1
 	accrual := rand.Uint64N(1000) + 100
-	rows := sqlmock.
+	rows := sqlMock.
 		NewRows([]string{"id", "user_id", "status", "accrual", "created_at", "updated_at"}).
 		AddRow(int64(id), int32(userID), "TEST_STATUS", int64(accrual), time.Now(), time.Now()).
 		AddRow(int64(id)+1, int32(userID)+1, "TEST_STATUS_2", int64(accrual)+1, time.Now(), time.Now())
-	sqlmock.ExpectQuery(`SELECT * FROM "orders" WHERE user_id = $1 ORDER BY created_at DESC`).WillReturnRows(rows)
+	sqlMock.
+		ExpectQuery(`SELECT * FROM "orders" WHERE user_id = $1 ORDER BY created_at DESC`).
+		WithArgs(userID).
+		WillReturnRows(rows)
 
 	orders, err := repository.FindByUserID(context.Background(), userID)
 	require.NoError(t, err)
@@ -66,15 +72,18 @@ func TestOrderRepository_FindByUserID(t *testing.T) {
 }
 
 func TestOrderRepository_FindByID(t *testing.T) {
-	gorm, sqlmock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := repositorytest.NewDBMock(t)
 	repository := NewOrderRepository(gorm)
 	id := rand.Uint64N(1000) + 1
 	userID := rand.Uint32N(1000) + 1
 	accrual := rand.Uint64N(1000) + 100
-	rows := sqlmock.
+	rows := sqlMock.
 		NewRows([]string{"id", "user_id", "status", "accrual", "created_at", "updated_at"}).
 		AddRow(int64(id), int32(userID), "TEST_STATUS", int64(accrual), time.Now(), time.Now())
-	sqlmock.ExpectQuery(`SELECT * FROM "orders" WHERE id = $1 LIMIT $2`).WillReturnRows(rows)
+	sqlMock.
+		ExpectQuery(`SELECT * FROM "orders" WHERE id = $1 LIMIT $2`).
+		WithArgs(id, 1).
+		WillReturnRows(rows)
 
 	order, err := repository.FindByID(context.Background(), id)
 	require.NoError(t, err)
@@ -85,14 +94,17 @@ func TestOrderRepository_FindByID(t *testing.T) {
 }
 
 func TestOrderRepository_FindUnprocessedIDs(t *testing.T) {
-	gorm, sqlmock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := repositorytest.NewDBMock(t)
 	repository := NewOrderRepository(gorm)
 	id := rand.Uint64N(1000) + 1
-	rows := sqlmock.
+	rows := sqlMock.
 		NewRows([]string{"id"}).
 		AddRow(int64(id)).
 		AddRow(int64(id) + 1)
-	sqlmock.ExpectQuery(`SELECT * FROM "orders" WHERE status IN ($1,$2) ORDER BY created_at ASC`).WillReturnRows(rows)
+	sqlMock.
+		ExpectQuery(`SELECT * FROM "orders" WHERE status IN ($1,$2) ORDER BY created_at ASC`).
+		WithArgs(entity.OrderStatusNew, entity.OrderStatusProcessing).
+		WillReturnRows(rows)
 
 	ids, err := repository.FindUnprocessedIDs(context.Background())
 	require.NoError(t, err)
