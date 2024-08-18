@@ -99,8 +99,10 @@ func New(config *config.Config) (*app, error) {
 	}
 
 	return &app{
-		server:              server.New(config.RunAddress, router),
-		retrieverProcessor:  retrieverProcessor.NewProcessor(client, orderQueue, routerQueue, config.RetrieverConcurrency),
+		server: server.New(config.RunAddress, router),
+		retrieverProcessor: retrieverProcessor.NewProcessor(client, orderQueue, routerQueue, &retrieverProcessor.Config{
+			Concurrency: config.RetrieverConcurrency,
+		}),
 		routerProcessor:     routerProcessor.NewProcessor(orderQueue, routerQueue, processingQueue, invalidQueue, processedQueue, config.RouterConcurrency),
 		processingProcessor: processingProcessor.NewProcessor(orderQueue, processingQueue, orderManager, config.ProcessingConcurrency, config.UpdateBatchSize),
 		invalidProcessor:    invalidProcessor.NewProcessor(invalidQueue, orderManager, config.InvalidConcurrency, config.UpdateBatchSize),

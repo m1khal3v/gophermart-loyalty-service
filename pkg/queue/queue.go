@@ -34,14 +34,18 @@ func (queue *Queue[T]) PushChannel(items <-chan T) {
 }
 
 func (queue *Queue[T]) PushDelayed(ctx context.Context, item T, delay time.Duration) {
-	go func() {
-		select {
-		case <-ctx.Done():
-			// push cancelled if context cancelled
-		case <-time.After(delay):
-			queue.items <- item
-		}
-	}()
+	if delay > 0 {
+		go func() {
+			select {
+			case <-ctx.Done():
+				// push cancelled if context cancelled
+			case <-time.After(delay):
+				queue.items <- item
+			}
+		}()
+	} else {
+		queue.items <- item
+	}
 }
 
 func (queue *Queue[T]) PushBatchDelayed(ctx context.Context, items []T, delay time.Duration) {

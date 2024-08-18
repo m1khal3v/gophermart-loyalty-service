@@ -14,33 +14,59 @@ import (
 	"time"
 )
 
-const NoTasksDelay = time.Second * 5
-const FailedTaskDelay = time.Second * 10
+const DefaultConcurrency = 10
+const DefaultNoTasksDelay = time.Second * 5
+const DefaultFailedTaskDelay = time.Second * 10
+
+type accrualClient interface {
+	GetAccrual(ctx context.Context, orderID uint64) (*responses.Accrual, error)
+}
 
 type Processor struct {
-	accrualClient *client.Client
+	accrualClient accrualClient
 	orderQueue    *queue.Queue[uint64]
 	accrualQueue  *queue.Queue[*responses.Accrual]
-	concurrency   uint64
 	waitFor       atomic.Pointer[time.Time]
+	config        *Config
+}
+
+type Config struct {
+	Concurrency     uint64
+	NoTasksDelay    *time.Duration
+	FailedTaskDelay *time.Duration
+}
+
+func prepareConfig(config *Config) {
+	if config.Concurrency == 0 {
+		config.Concurrency = DefaultConcurrency
+	}
+	if config.NoTasksDelay == nil || *config.NoTasksDelay < 0 {
+		defaultValue := DefaultNoTasksDelay
+		config.NoTasksDelay = &defaultValue
+	}
+	if config.FailedTaskDelay == nil || *config.FailedTaskDelay < 0 {
+		defaultValue := DefaultFailedTaskDelay
+		config.FailedTaskDelay = &defaultValue
+	}
 }
 
 func NewProcessor(
-	accrualClient *client.Client,
+	accrualClient accrualClient,
 	orderQueue *queue.Queue[uint64],
 	accrualQueue *queue.Queue[*responses.Accrual],
-	concurrency uint64,
+	config *Config,
 ) *Processor {
+	prepareConfig(config)
 	return &Processor{
 		accrualClient: accrualClient,
 		orderQueue:    orderQueue,
 		accrualQueue:  accrualQueue,
-		concurrency:   concurrency,
+		config:        config,
 	}
 }
 
 func (processor *Processor) Process(ctx context.Context) error {
-	semaphore := semaphore.New(processor.concurrency)
+	semaphore := semaphore.New(processor.config.Concurrency)
 
 	for {
 		if err := semaphore.Acquire(ctx); err != nil {
@@ -75,7 +101,7 @@ func (processor *Processor) processOrder(ctx context.Context, orderID uint64) er
 			processor.setWaitFor(target.RetryAfterTime)
 			processor.orderQueue.Push(orderID)
 		} else {
-			processor.orderQueue.PushDelayed(ctx, orderID, FailedTaskDelay)
+			processor.orderQueue.PushDelayed(ctx, orderID, *processor.config.FailedTaskDelay)
 		}
 
 		return fmt.Errorf("accrual %d: %w", orderID, err)
@@ -92,7 +118,7 @@ func (processor *Processor) waitIfNeed(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return context.Cause(ctx)
-		case <-time.After(NoTasksDelay):
+		case <-time.After(*processor.config.NoTasksDelay):
 			continue
 		}
 	}
