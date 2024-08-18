@@ -143,7 +143,7 @@ func TestUserManager_Authorize(t *testing.T) {
 			name: "ok",
 			repository: func() userRepository {
 				repository := Mock[userRepository]()
-				password, _ := bcrypt.NewHash("password_1", 1)
+				password, _ := bcrypt.NewHash("password_1", bcrypt.MinCost)
 				WhenDouble(repository.FindOneByLogin(
 					AnyContext(),
 					Exact("login_1"),
@@ -185,7 +185,7 @@ func TestUserManager_Authorize(t *testing.T) {
 			name: "invalid password",
 			repository: func() userRepository {
 				repository := Mock[userRepository]()
-				password, _ := bcrypt.NewHash("password_invalid", 1)
+				password, _ := bcrypt.NewHash("password_invalid", bcrypt.MinCost)
 				WhenDouble(repository.FindOneByLogin(
 					AnyContext(),
 					Exact("login_3"),
