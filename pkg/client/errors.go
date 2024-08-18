@@ -50,3 +50,4 @@ func newErrTooManyRequests(retryAfter time.Duration) ErrTooManyRequests {
 
 var ErrInvalidCredentials = errors.New("invalid credentials")
 var ErrInternalServerError = errors.New("internal server error")
+var ErrBadRequest = errors.New("bad request")

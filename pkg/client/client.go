@@ -110,7 +110,7 @@ func compressRequestBody(client *resty.Client, request *http.Request) error {
 	return nil
 }
 
-func (client *Client) Register(ctx context.Context, request requests.Register) (*responses.Auth, *responses.APIError, error) {
+func (client *Client) Register(ctx context.Context, request *requests.Register) (*responses.Auth, *responses.APIError, error) {
 	result, err := client.doRequest(client.createRequest(ctx).
 		SetHeader("Content-Type", "application/json").
 		SetBody(request).
@@ -128,7 +128,7 @@ func (client *Client) Register(ctx context.Context, request requests.Register) (
 	return result.Result().(*responses.Auth), nil, nil
 }
 
-func (client *Client) Login(ctx context.Context, request requests.Login) (*responses.Auth, *responses.APIError, error) {
+func (client *Client) Login(ctx context.Context, request *requests.Login) (*responses.Auth, *responses.APIError, error) {
 	result, err := client.doRequest(client.createRequest(ctx).
 		SetHeader("Content-Type", "application/json").
 		SetBody(request).
@@ -216,8 +216,9 @@ func (client *Client) Balance(ctx context.Context, token string) (*responses.Bal
 	return result.Result().(*responses.Balance), nil, nil
 }
 
-func (client *Client) Withdraw(ctx context.Context, token string, request requests.Withdraw) (*responses.Message, *responses.APIError, error) {
+func (client *Client) Withdraw(ctx context.Context, token string, request *requests.Withdraw) (*responses.Message, *responses.APIError, error) {
 	result, err := client.doRequest(client.createRequest(ctx).
+		SetHeader("Content-Type", "application/json").
 		SetHeader("Authorization", fmt.Sprintf("Bearer %s", token)).
 		SetBody(request).
 		SetResult(&responses.Message{}),
@@ -250,6 +251,8 @@ func (client *Client) doRequest(request *resty.Request, method, url string) (*re
 		switch status := result.StatusCode(); {
 		case status >= http.StatusOK && status < http.StatusMultipleChoices:
 			return nil
+		case status == http.StatusBadRequest:
+			return ErrBadRequest
 		case status == http.StatusUnauthorized:
 			return ErrInvalidCredentials
 		case status == http.StatusTooManyRequests:
