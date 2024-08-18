@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql/driver"
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/repositorytest"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,7 +13,7 @@ import (
 )
 
 func TestUserRepository_FindOneByLogin(t *testing.T) {
-	gorm, sqlMock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := NewDBMock(t)
 	repository := NewUserRepository(gorm)
 	id := rand.Uint32N(1000) + 1
 	balance := rand.Uint64N(1000) + 100
@@ -36,7 +35,7 @@ func TestUserRepository_FindOneByLogin(t *testing.T) {
 }
 
 func TestUserRepository_FindByID(t *testing.T) {
-	gorm, sqlMock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := NewDBMock(t)
 	repository := NewUserRepository(gorm)
 	id := rand.Uint32N(1000) + 1
 	balance := rand.Uint64N(1000) + 100
@@ -76,7 +75,7 @@ func TestUserRepository_Withdraw(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gorm, sqlMock := repositorytest.NewDBMock(t)
+			gorm, sqlMock := NewDBMock(t)
 			repository := NewUserRepository(gorm)
 			id := rand.Uint32N(1000) + 1
 			sum := money.New(rand.Float64() + 100)
@@ -114,7 +113,7 @@ func TestUserRepository_Accrue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gorm, sqlMock := repositorytest.NewDBMock(t)
+			gorm, sqlMock := NewDBMock(t)
 			repository := NewUserRepository(gorm)
 			id := rand.Uint32N(1000) + 1
 			sum := money.New(rand.Float64() + 100)

@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/repositorytest"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
 	"github.com/stretchr/testify/require"
 	"math/rand/v2"
@@ -11,7 +10,7 @@ import (
 )
 
 func TestUserWithdrawalRepository_Withdraw(t *testing.T) {
-	gorm, sqlMock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := NewDBMock(t)
 	repository := NewUserWithdrawalRepository(gorm)
 	id := rand.Uint64N(1000) + 1
 	userID := rand.Uint32N(1000) + 1

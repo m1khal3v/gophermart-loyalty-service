@@ -1,6 +1,10 @@
 package client
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
 
 type ErrUnexpectedStatus struct {
 	Status int
@@ -29,3 +33,20 @@ func newErrInvalidAddress(address string) ErrInvalidAddress {
 		Address: address,
 	}
 }
+
+type ErrTooManyRequests struct {
+	RetryAfterTime time.Time
+}
+
+func (err ErrTooManyRequests) Error() string {
+	return "too many requests"
+}
+
+func newErrTooManyRequests(retryAfter time.Duration) ErrTooManyRequests {
+	return ErrTooManyRequests{
+		RetryAfterTime: time.Now().Add(retryAfter),
+	}
+}
+
+var ErrInvalidCredentials = errors.New("invalid credentials")
+var ErrInternalServerError = errors.New("internal server error")

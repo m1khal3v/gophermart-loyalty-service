@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/repositorytest"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
 	"github.com/stretchr/testify/require"
 	gormerr "gorm.io/gorm"
@@ -14,7 +13,7 @@ import (
 )
 
 func TestUserOrderRepository_AccrueOK(t *testing.T) {
-	gorm, sqlMock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := NewDBMock(t)
 	repository := NewUserOrderRepository(gorm)
 	id := rand.Uint64N(1000) + 1
 	userID := rand.Uint32N(1000) + 1
@@ -43,7 +42,7 @@ func TestUserOrderRepository_AccrueOK(t *testing.T) {
 }
 
 func TestUserOrderRepository_AccrueOrderNotFound(t *testing.T) {
-	gorm, sqlMock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := NewDBMock(t)
 	repository := NewUserOrderRepository(gorm)
 	id := rand.Uint64N(1000) + 1
 	sum := money.New(rand.Float64() + 100)

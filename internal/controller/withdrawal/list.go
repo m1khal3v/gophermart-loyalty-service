@@ -21,9 +21,7 @@ func (container *Container) List(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 	if !has {
-		controller.WriteJSONResponse(http.StatusNoContent, responses.Message{
-			Message: "withdrawals not found",
-		}, writer)
+		controller.WriteJSONResponse(http.StatusNoContent, []responses.Withdrawal{}, writer)
 		return
 	}
 

@@ -5,7 +5,6 @@ import (
 	"database/sql/driver"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/repositorytest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"math/rand/v2"
@@ -14,7 +13,7 @@ import (
 )
 
 func TestOrderRepository_FindOneByUserID(t *testing.T) {
-	gorm, sqlMock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := NewDBMock(t)
 	repository := NewOrderRepository(gorm)
 	id := rand.Uint64N(1000) + 1
 	userID := rand.Uint32N(1000) + 1
@@ -36,7 +35,7 @@ func TestOrderRepository_FindOneByUserID(t *testing.T) {
 }
 
 func TestOrderRepository_FindByUserID(t *testing.T) {
-	gorm, sqlMock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := NewDBMock(t)
 	repository := NewOrderRepository(gorm)
 	id := rand.Uint64N(1000) + 1
 	userID := rand.Uint32N(1000) + 1
@@ -72,7 +71,7 @@ func TestOrderRepository_FindByUserID(t *testing.T) {
 }
 
 func TestOrderRepository_FindByID(t *testing.T) {
-	gorm, sqlMock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := NewDBMock(t)
 	repository := NewOrderRepository(gorm)
 	id := rand.Uint64N(1000) + 1
 	userID := rand.Uint32N(1000) + 1
@@ -94,7 +93,7 @@ func TestOrderRepository_FindByID(t *testing.T) {
 }
 
 func TestOrderRepository_FindUnprocessedIDs(t *testing.T) {
-	gorm, sqlMock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := NewDBMock(t)
 	repository := NewOrderRepository(gorm)
 	id := rand.Uint64N(1000) + 1
 	rows := sqlMock.
@@ -122,7 +121,7 @@ func TestOrderRepository_FindUnprocessedIDs(t *testing.T) {
 }
 
 func TestOrderRepository_UpdateStatus(t *testing.T) {
-	gorm, sqlMock := repositorytest.NewDBMock(t)
+	gorm, sqlMock := NewDBMock(t)
 	repository := NewOrderRepository(gorm)
 	ids := []uint64{
 		rand.Uint64N(1000) + 1,

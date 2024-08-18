@@ -21,14 +21,13 @@ import (
 func TestContainer_List(t *testing.T) {
 	accrual := 1.23
 	tests := []struct {
-		name            string
-		ctx             context.Context
-		manager         func() orderManager
-		verify          func(manager orderManager)
-		status          int
-		listResponse    []responses.Order
-		messageResponse *responses.Message
-		errResponse     *responses.APIError
+		name        string
+		ctx         context.Context
+		manager     func() orderManager
+		verify      func(manager orderManager)
+		status      int
+		response    []responses.Order
+		errResponse *responses.APIError
 	}{
 		{
 			name: "valid orders",
@@ -82,7 +81,7 @@ func TestContainer_List(t *testing.T) {
 				)
 			},
 			status: http.StatusOK,
-			listResponse: []responses.Order{
+			response: []responses.Order{
 				{
 					Number:     1,
 					Status:     entity.OrderStatusNew,
@@ -128,10 +127,8 @@ func TestContainer_List(t *testing.T) {
 					Any[uint32](),
 				)
 			},
-			status: http.StatusNoContent,
-			messageResponse: &responses.Message{
-				Message: "orders not found",
-			},
+			status:   http.StatusNoContent,
+			response: []responses.Order{},
 		},
 		{
 			name: "cant get credentials",
@@ -229,22 +226,16 @@ func TestContainer_List(t *testing.T) {
 
 			require.Equal(t, tt.status, recorder.Code)
 
-			if tt.listResponse != nil {
+			if tt.response != nil {
 				response := []responses.Order{}
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
-				assert.Equal(t, tt.listResponse, response)
+				assert.Equal(t, tt.response, response)
 			}
 
 			if tt.errResponse != nil {
 				response := &responses.APIError{}
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), response))
 				assert.Equal(t, tt.errResponse, response)
-			}
-
-			if tt.messageResponse != nil {
-				response := &responses.Message{}
-				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), response))
-				assert.Equal(t, tt.messageResponse, response)
 			}
 
 			tt.verify(manager)

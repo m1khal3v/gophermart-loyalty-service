@@ -3,18 +3,17 @@ package repository
 import (
 	"context"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/repository"
 	"gorm.io/gorm"
 	"time"
 )
 
 type OrderRepository struct {
-	*repository.Repository[entity.Order]
+	*Repository[entity.Order]
 }
 
 func NewOrderRepository(db *gorm.DB) *OrderRepository {
 	return &OrderRepository{
-		Repository: repository.New[entity.Order](db),
+		Repository: New[entity.Order](db),
 	}
 }
 

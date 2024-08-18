@@ -19,14 +19,13 @@ import (
 
 func TestContainer_List(t *testing.T) {
 	tests := []struct {
-		name            string
-		ctx             context.Context
-		manager         func() withdrawalManager
-		verify          func(manager withdrawalManager)
-		status          int
-		listResponse    []responses.Withdrawal
-		messageResponse *responses.Message
-		errResponse     *responses.APIError
+		name        string
+		ctx         context.Context
+		manager     func() withdrawalManager
+		verify      func(manager withdrawalManager)
+		status      int
+		response    []responses.Withdrawal
+		errResponse *responses.APIError
 	}{
 		{
 			name: "valid withdrawals",
@@ -65,7 +64,7 @@ func TestContainer_List(t *testing.T) {
 				)
 			},
 			status: http.StatusOK,
-			listResponse: []responses.Withdrawal{
+			response: []responses.Withdrawal{
 				{
 					Order:       1,
 					Sum:         1.11,
@@ -110,10 +109,8 @@ func TestContainer_List(t *testing.T) {
 					Any[uint32](),
 				)
 			},
-			status: http.StatusNoContent,
-			messageResponse: &responses.Message{
-				Message: "withdrawals not found",
-			},
+			status:   http.StatusNoContent,
+			response: []responses.Withdrawal{},
 		},
 		{
 			name: "cant get credentials",
@@ -211,22 +208,16 @@ func TestContainer_List(t *testing.T) {
 
 			require.Equal(t, tt.status, recorder.Code)
 
-			if tt.listResponse != nil {
+			if tt.response != nil {
 				response := []responses.Withdrawal{}
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
-				assert.Equal(t, tt.listResponse, response)
+				assert.Equal(t, tt.response, response)
 			}
 
 			if tt.errResponse != nil {
 				response := &responses.APIError{}
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), response))
 				assert.Equal(t, tt.errResponse, response)
-			}
-
-			if tt.messageResponse != nil {
-				response := &responses.Message{}
-				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), response))
-				assert.Equal(t, tt.messageResponse, response)
 			}
 
 			tt.verify(manager)

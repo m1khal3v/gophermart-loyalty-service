@@ -3,18 +3,17 @@ package repository
 import (
 	"context"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/repository"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
 	"gorm.io/gorm"
 )
 
 type UserRepository struct {
-	*repository.Repository[entity.User]
+	*Repository[entity.User]
 }
 
 func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{
-		Repository: repository.New[entity.User](db),
+		Repository: New[entity.User](db),
 	}
 }
 

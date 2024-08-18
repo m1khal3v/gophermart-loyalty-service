@@ -3,17 +3,16 @@ package repository
 import (
 	"context"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/repository"
 	"gorm.io/gorm"
 )
 
 type WithdrawalRepository struct {
-	*repository.Repository[entity.Withdrawal]
+	*Repository[entity.Withdrawal]
 }
 
 func NewWithdrawalRepository(db *gorm.DB) *WithdrawalRepository {
 	return &WithdrawalRepository{
-		Repository: repository.New[entity.Withdrawal](db),
+		Repository: New[entity.Withdrawal](db),
 	}
 }
 
