@@ -106,7 +106,10 @@ func New(config *config.Config) (*app, error) {
 		routerProcessor: routerProcessor.NewProcessor(orderQueue, routerQueue, processingQueue, invalidQueue, processedQueue, &routerProcessor.Config{
 			Concurrency: config.RouterConcurrency,
 		}),
-		processingProcessor: processingProcessor.NewProcessor(orderQueue, processingQueue, orderManager, config.ProcessingConcurrency, config.UpdateBatchSize),
+		processingProcessor: processingProcessor.NewProcessor(orderQueue, processingQueue, orderManager, &processingProcessor.Config{
+			Concurrency: config.ProcessingConcurrency,
+			BatchSize:   config.UpdateBatchSize,
+		}),
 		invalidProcessor: invalidProcessor.NewProcessor(invalidQueue, orderManager, &invalidProcessor.Config{
 			Concurrency: config.InvalidConcurrency,
 			BatchSize:   config.UpdateBatchSize,
