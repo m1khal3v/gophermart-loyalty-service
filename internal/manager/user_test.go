@@ -252,3 +252,98 @@ func TestUserManager_Authorize(t *testing.T) {
 		})
 	}
 }
+
+func TestUserManager_FindByID(t *testing.T) {
+	someErr := errors.New("some error")
+	tests := []struct {
+		name       string
+		repository func() userRepository
+		verify     func(repository userRepository)
+		want       *entity.User
+		wantErr    error
+	}{
+		{
+			name: "found",
+			repository: func() userRepository {
+				repository := Mock[userRepository]()
+				WhenDouble(repository.FindByID(
+					AnyContext(),
+					Exact[uint32](1),
+				)).ThenReturn(&entity.User{
+					ID:    1,
+					Login: "ivan_ivanov",
+				}, nil)
+
+				return repository
+			},
+			verify: func(repository userRepository) {
+				Verify(repository, Once()).FindByID(
+					AnyContext(),
+					Exact[uint32](1),
+				)
+			},
+			want: &entity.User{
+				ID:    1,
+				Login: "ivan_ivanov",
+			},
+		},
+		{
+			name: "not found",
+			repository: func() userRepository {
+				repository := Mock[userRepository]()
+				WhenDouble(repository.FindByID(
+					AnyContext(),
+					Exact[uint32](2),
+				)).ThenReturn(nil, nil)
+
+				return repository
+			},
+			verify: func(repository userRepository) {
+				Verify(repository, Once()).FindByID(
+					AnyContext(),
+					Exact[uint32](2),
+				)
+			},
+			wantErr: ErrUserNotFound,
+		},
+		{
+			name: "error",
+			repository: func() userRepository {
+				repository := Mock[userRepository]()
+				WhenDouble(repository.FindByID(
+					AnyContext(),
+					Exact[uint32](3),
+				)).ThenReturn(nil, someErr)
+
+				return repository
+			},
+			verify: func(repository userRepository) {
+				Verify(repository, Once()).FindByID(
+					AnyContext(),
+					Exact[uint32](3),
+				)
+			},
+			wantErr: someErr,
+		},
+	}
+	for id, tt := range tests {
+		id++
+		t.Run(tt.name, func(t *testing.T) {
+			SetUp(t)
+			repository := tt.repository()
+			jwt := jwt.New(fmt.Sprintf("secret_%d", id))
+			manager := NewUserManager(repository, jwt)
+
+			got, err := manager.FindByID(context.Background(), uint32(id))
+
+			assert.Equal(t, tt.want, got)
+			if tt.wantErr != nil {
+				assert.ErrorAs(t, err, &tt.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			tt.verify(repository)
+		})
+	}
+}

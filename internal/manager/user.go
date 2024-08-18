@@ -11,6 +11,7 @@ import (
 
 var ErrLoginAlreadyExists = errors.New("login already exists")
 var ErrInvalidCredentials = errors.New("invalid credentials")
+var ErrUserNotFound = errors.New("user not found")
 
 type userRepository interface {
 	Create(ctx context.Context, entity *entity.User) error
@@ -79,5 +80,13 @@ func (manager *UserManager) Authorize(ctx context.Context, login, password strin
 }
 
 func (manager *UserManager) FindByID(ctx context.Context, id uint32) (*entity.User, error) {
-	return manager.userRepository.FindByID(ctx, id)
+	user, err := manager.userRepository.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+
+	return user, nil
 }
