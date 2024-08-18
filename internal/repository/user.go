@@ -22,7 +22,7 @@ func (repository *UserRepository) FindOneByLogin(ctx context.Context, login stri
 	return repository.FindOneBy(ctx, "login = ?", login)
 }
 
-func (repository *UserRepository) FindOneByID(ctx context.Context, id uint32) (*entity.User, error) {
+func (repository *UserRepository) FindByID(ctx context.Context, id uint32) (*entity.User, error) {
 	return repository.FindOneBy(ctx, "id = ?", id)
 }
 

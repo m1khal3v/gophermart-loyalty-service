@@ -15,7 +15,7 @@ var ErrInvalidCredentials = errors.New("invalid credentials")
 type userRepository interface {
 	Create(ctx context.Context, entity *entity.User) error
 	FindOneByLogin(ctx context.Context, login string) (*entity.User, error)
-	FindOneByID(ctx context.Context, id uint32) (*entity.User, error)
+	FindByID(ctx context.Context, id uint32) (*entity.User, error)
 }
 
 type UserManager struct {
@@ -79,5 +79,5 @@ func (manager *UserManager) Authorize(ctx context.Context, login, password strin
 }
 
 func (manager *UserManager) FindByID(ctx context.Context, id uint32) (*entity.User, error) {
-	return manager.userRepository.FindOneByID(ctx, id)
+	return manager.userRepository.FindByID(ctx, id)
 }
