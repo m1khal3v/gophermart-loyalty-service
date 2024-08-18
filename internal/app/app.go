@@ -103,7 +103,9 @@ func New(config *config.Config) (*app, error) {
 		retrieverProcessor: retrieverProcessor.NewProcessor(client, orderQueue, routerQueue, &retrieverProcessor.Config{
 			Concurrency: config.RetrieverConcurrency,
 		}),
-		routerProcessor:     routerProcessor.NewProcessor(orderQueue, routerQueue, processingQueue, invalidQueue, processedQueue, config.RouterConcurrency),
+		routerProcessor: routerProcessor.NewProcessor(orderQueue, routerQueue, processingQueue, invalidQueue, processedQueue, &routerProcessor.Config{
+			Concurrency: config.RouterConcurrency,
+		}),
 		processingProcessor: processingProcessor.NewProcessor(orderQueue, processingQueue, orderManager, config.ProcessingConcurrency, config.UpdateBatchSize),
 		invalidProcessor:    invalidProcessor.NewProcessor(invalidQueue, orderManager, config.InvalidConcurrency, config.UpdateBatchSize),
 		processedProcessor:  processedProcessor.NewProcessor(processedQueue, userOrderManager, config.ProcessedConcurrency, config.UpdateBatchSize),
