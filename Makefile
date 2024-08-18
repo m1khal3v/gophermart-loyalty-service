@@ -13,6 +13,9 @@ logs:
 migrate:
 	docker compose run --rm goose
 
+vet:
+	docker compose run --rm --no-deps service go vet ./...
+
 test:
 	docker compose run --rm --no-deps service go test -v ./...
 

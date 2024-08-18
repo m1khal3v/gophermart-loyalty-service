@@ -19,8 +19,14 @@ func (manager *UserOrderManager) Accrue(ctx context.Context, orderID uint64, acc
 	return manager.userOrderRepository.Accrue(ctx, orderID, accrual)
 }
 
-func (manager *UserOrderManager) Transaction(ctx context.Context, fn func(ctx context.Context, manager *UserOrderManager) error) error {
+func (manager *UserOrderManager) AccrueBatch(ctx context.Context, accruals map[uint64]float64) error {
 	return manager.userOrderRepository.Transaction(ctx, func(ctx context.Context, repository *repository.UserOrderRepository) error {
-		return fn(ctx, NewUserOrderManager(repository))
+		for orderID, accrual := range accruals {
+			if err := repository.Accrue(ctx, orderID, accrual); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
 }
