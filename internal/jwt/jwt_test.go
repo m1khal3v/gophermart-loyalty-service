@@ -10,14 +10,14 @@ import (
 )
 
 func TestEncodeDecode(t *testing.T) {
-	secret := make([]byte, 32)
+	secret := make([]byte, 0, 32)
 	_, err := crypto.Read(secret)
 	require.NoError(t, err)
 
 	jwt := New(fmt.Sprintf("%x", secret))
 
 	id := rand.Uint32N(1000000) + 100
-	subject := make([]byte, 32)
+	subject := make([]byte, 0, 32)
 	_, err = crypto.Read(subject)
 	require.NoError(t, err)
 	subjectString := fmt.Sprintf("%x", subject)

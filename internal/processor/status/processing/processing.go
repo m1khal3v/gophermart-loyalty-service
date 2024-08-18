@@ -69,7 +69,7 @@ func (processor *Processor) Process(ctx context.Context) error {
 }
 
 func (processor *Processor) processAccruals(ctx context.Context, accruals []*responses.Accrual) error {
-	ids := make([]uint64, len(accruals))
+	ids := make([]uint64, 0, len(accruals))
 	for _, accrual := range accruals {
 		ids = append(ids, accrual.OrderID)
 	}
