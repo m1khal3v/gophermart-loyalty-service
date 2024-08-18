@@ -2,10 +2,13 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
 	"gorm.io/gorm"
 )
+
+var ErrOrderNotFound = errors.New("order not found")
 
 type UserOrderRepository struct {
 	db *gorm.DB
@@ -25,6 +28,9 @@ func (userOrderRepository *UserOrderRepository) Accrue(ctx context.Context, orde
 		order, err := orderRepository.FindByID(ctx, orderID)
 		if err != nil {
 			return err
+		}
+		if order == nil {
+			return ErrOrderNotFound
 		}
 
 		order.Status = entity.OrderStatusProcessed
