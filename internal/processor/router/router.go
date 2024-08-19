@@ -11,7 +11,6 @@ import (
 
 const DefaultConcurrency = 10
 const DefaultNoTasksDelay = time.Second * 5
-const DefaultFailedTaskDelay = time.Second * 10
 const DefaultNoChangesDelay = time.Minute
 
 type Processor struct {
@@ -24,10 +23,9 @@ type Processor struct {
 }
 
 type Config struct {
-	Concurrency     uint64
-	NoTasksDelay    *time.Duration
-	FailedTaskDelay *time.Duration
-	NoChangesDelay  *time.Duration
+	Concurrency    uint64
+	NoTasksDelay   *time.Duration
+	NoChangesDelay *time.Duration
 }
 
 func prepareConfig(config *Config) {
@@ -37,10 +35,6 @@ func prepareConfig(config *Config) {
 	if config.NoTasksDelay == nil || *config.NoTasksDelay < 0 {
 		defaultValue := DefaultNoTasksDelay
 		config.NoTasksDelay = &defaultValue
-	}
-	if config.FailedTaskDelay == nil || *config.FailedTaskDelay < 0 {
-		defaultValue := DefaultFailedTaskDelay
-		config.FailedTaskDelay = &defaultValue
 	}
 	if config.NoChangesDelay == nil || *config.NoChangesDelay < 0 {
 		defaultValue := DefaultNoChangesDelay
@@ -103,10 +97,11 @@ func (processor *Processor) processAccrual(ctx context.Context, accrual *respons
 		processor.invalidQueue.Push(accrual)
 	case responses.AccrualStatusProcessed:
 		if accrual.Accrual == nil {
-			processor.orderQueue.PushDelayed(ctx, accrual.OrderID, *processor.config.FailedTaskDelay)
-		} else {
-			processor.processedQueue.Push(accrual)
+			sum := float64(0)
+			accrual.Accrual = &sum
 		}
+
+		processor.processedQueue.Push(accrual)
 	}
 }
 

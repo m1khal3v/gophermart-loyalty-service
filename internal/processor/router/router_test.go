@@ -133,7 +133,7 @@ func TestProcessor_processAccrualProcessedOK(t *testing.T) {
 	assert.Equal(t, response, retrieved)
 }
 
-func TestProcessor_processAccrualProcessedErr(t *testing.T) {
+func TestProcessor_processAccrualProcessedZero(t *testing.T) {
 	orderID := rand.Uint64N(1000) + 100
 	response := &responses.Accrual{
 		OrderID: orderID,
@@ -146,19 +146,18 @@ func TestProcessor_processAccrualProcessedErr(t *testing.T) {
 	processingQueue := queue.New[*responses.Accrual](1)
 	processedQueue := queue.New[*responses.Accrual](1)
 
-	noDelay := time.Duration(0)
-	processor := NewProcessor(orderQueue, routerQueue, processingQueue, invalidQueue, processedQueue, &Config{
-		FailedTaskDelay: &noDelay,
-	})
+	processor := NewProcessor(orderQueue, routerQueue, processingQueue, invalidQueue, processedQueue, &Config{})
 	processor.processAccrual(context.Background(), response)
 
-	assert.EqualValues(t, 1, orderQueue.Count())
+	assert.EqualValues(t, 0, orderQueue.Count())
 	assert.EqualValues(t, 0, routerQueue.Count())
 	assert.EqualValues(t, 0, processingQueue.Count())
 	assert.EqualValues(t, 0, invalidQueue.Count())
-	assert.EqualValues(t, 0, processedQueue.Count())
+	assert.EqualValues(t, 1, processedQueue.Count())
 
-	retrieved, ok := orderQueue.Pop()
+	retrieved, ok := processedQueue.Pop()
 	require.True(t, ok)
-	assert.Equal(t, response.OrderID, retrieved)
+	assert.Equal(t, response.OrderID, retrieved.OrderID)
+	assert.Equal(t, response.Status, retrieved.Status)
+	assert.Equal(t, 0.0, *retrieved.Accrual)
 }

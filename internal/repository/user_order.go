@@ -38,6 +38,9 @@ func (userOrderRepository *UserOrderRepository) Accrue(ctx context.Context, orde
 		if err := orderRepository.Save(ctx, order); err != nil {
 			return err
 		}
+		if accrual == 0 {
+			return nil
+		}
 
 		if ok, err := userRepository.Accrue(ctx, order.UserID, accrual); err != nil || !ok {
 			return err
