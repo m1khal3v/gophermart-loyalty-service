@@ -87,7 +87,7 @@ _(за расчет количества начисленных баллов о�
 | [golang-jwt/jwt](https://github.com/golang-jwt/jwt)                                               | Работа с JWT                   |
 | [asaskevich/govalidator](https://github.com/asaskevich/govalidator)                               | Валидация данных               |
 | [go-resty/resty](https://github.com/go-resty/resty)                                               | HTTP-клиенты                   |
-| [go-gorm/gorm](https://github.com/go-gorm/gorm)                                                   | ORM                            |
+| [go-gorm/gorm](https://github.com/go-gorm/gorm)                                                   | ORM, DBAL                      |
 | [ariga/atlas](https://github.com/ariga/atlas) и [pressly/goose](https://github.com/pressly/goose) | Миграции БД                    |
 | [stretchr/testify](https://github.com/stretchr/testify)                                           | Unit-тестирование              |
 | [ovechkin-dm/mockio](https://github.com/ovechkin-dm/mockio)                                       | Создание mockов "на лету"      |
