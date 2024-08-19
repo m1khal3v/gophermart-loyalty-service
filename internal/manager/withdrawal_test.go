@@ -14,7 +14,6 @@ func TestWithdrawalManager_HasUser(t *testing.T) {
 	tests := []struct {
 		name       string
 		repository func() withdrawalRepository
-		verify     func(repository withdrawalRepository)
 		want       bool
 		wantErr    error
 	}{
@@ -25,15 +24,10 @@ func TestWithdrawalManager_HasUser(t *testing.T) {
 				WhenDouble(repository.FindOneByUserID(
 					AnyContext(),
 					Exact[uint32](1),
-				)).ThenReturn(&entity.Withdrawal{}, nil)
+				)).ThenReturn(&entity.Withdrawal{}, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository withdrawalRepository) {
-				Verify(repository, Once()).FindOneByUserID(
-					AnyContext(),
-					Exact[uint32](1),
-				)
 			},
 			want: true,
 		},
@@ -44,15 +38,10 @@ func TestWithdrawalManager_HasUser(t *testing.T) {
 				WhenDouble(repository.FindOneByUserID(
 					AnyContext(),
 					Exact[uint32](2),
-				)).ThenReturn(nil, nil)
+				)).ThenReturn(nil, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository withdrawalRepository) {
-				Verify(repository, Once()).FindOneByUserID(
-					AnyContext(),
-					Exact[uint32](2),
-				)
 			},
 			want: false,
 		},
@@ -63,15 +52,10 @@ func TestWithdrawalManager_HasUser(t *testing.T) {
 				WhenDouble(repository.FindOneByUserID(
 					AnyContext(),
 					Exact[uint32](3),
-				)).ThenReturn(nil, someErr)
+				)).ThenReturn(nil, someErr).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository withdrawalRepository) {
-				Verify(repository, Once()).FindOneByUserID(
-					AnyContext(),
-					Exact[uint32](3),
-				)
 			},
 			want:    false,
 			wantErr: someErr,
@@ -92,8 +76,6 @@ func TestWithdrawalManager_HasUser(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-
-			tt.verify(repository)
 		})
 	}
 }

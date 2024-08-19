@@ -15,7 +15,6 @@ func TestOrderManager_Register(t *testing.T) {
 	tests := []struct {
 		name       string
 		repository func() orderRepository
-		verify     func(repository orderRepository)
 		want       *entity.Order
 		wantErr    error
 	}{
@@ -31,19 +30,10 @@ func TestOrderManager_Register(t *testing.T) {
 				When(repository.CreateOrFind(
 					AnyContext(),
 					Equal(order),
-				)).ThenReturn(order, true, nil)
+				)).ThenReturn(order, true, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository orderRepository) {
-				Verify(repository, Once()).CreateOrFind(
-					AnyContext(),
-					Equal(&entity.Order{
-						ID:     1,
-						UserID: 11,
-						Status: entity.OrderStatusNew,
-					}),
-				)
 			},
 			want: &entity.Order{
 				ID:     1,
@@ -66,19 +56,10 @@ func TestOrderManager_Register(t *testing.T) {
 					ID:     2,
 					UserID: 22,
 					Status: entity.OrderStatusProcessed,
-				}, false, nil)
+				}, false, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository orderRepository) {
-				Verify(repository, Once()).CreateOrFind(
-					AnyContext(),
-					Equal(&entity.Order{
-						ID:     2,
-						UserID: 22,
-						Status: entity.OrderStatusNew,
-					}),
-				)
 			},
 			want: &entity.Order{
 				ID:     2,
@@ -102,19 +83,10 @@ func TestOrderManager_Register(t *testing.T) {
 					ID:     3,
 					UserID: 303,
 					Status: entity.OrderStatusInvalid,
-				}, false, nil)
+				}, false, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository orderRepository) {
-				Verify(repository, Once()).CreateOrFind(
-					AnyContext(),
-					Equal(&entity.Order{
-						ID:     3,
-						UserID: 33,
-						Status: entity.OrderStatusNew,
-					}),
-				)
 			},
 			wantErr: ErrOrderAlreadyRegisteredByAnotherUser,
 		},
@@ -129,19 +101,10 @@ func TestOrderManager_Register(t *testing.T) {
 						UserID: 44,
 						Status: entity.OrderStatusNew,
 					}),
-				)).ThenReturn(nil, false, someErr)
+				)).ThenReturn(nil, false, someErr).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository orderRepository) {
-				Verify(repository, Once()).CreateOrFind(
-					AnyContext(),
-					Equal(&entity.Order{
-						ID:     4,
-						UserID: 44,
-						Status: entity.OrderStatusNew,
-					}),
-				)
 			},
 			wantErr: someErr,
 		},
@@ -159,8 +122,6 @@ func TestOrderManager_Register(t *testing.T) {
 				require.NoError(t, err)
 			}
 			assert.Equal(t, tt.want, order)
-
-			tt.verify(repository)
 		})
 	}
 }
@@ -170,7 +131,6 @@ func TestOrderManager_HasUser(t *testing.T) {
 	tests := []struct {
 		name       string
 		repository func() orderRepository
-		verify     func(repository orderRepository)
 		want       bool
 		wantErr    error
 	}{
@@ -181,15 +141,10 @@ func TestOrderManager_HasUser(t *testing.T) {
 				WhenDouble(repository.FindOneByUserID(
 					AnyContext(),
 					Exact[uint32](1),
-				)).ThenReturn(&entity.Order{}, nil)
+				)).ThenReturn(&entity.Order{}, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository orderRepository) {
-				Verify(repository, Once()).FindOneByUserID(
-					AnyContext(),
-					Exact[uint32](1),
-				)
 			},
 			want: true,
 		},
@@ -200,15 +155,10 @@ func TestOrderManager_HasUser(t *testing.T) {
 				WhenDouble(repository.FindOneByUserID(
 					AnyContext(),
 					Exact[uint32](2),
-				)).ThenReturn(nil, nil)
+				)).ThenReturn(nil, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository orderRepository) {
-				Verify(repository, Once()).FindOneByUserID(
-					AnyContext(),
-					Exact[uint32](2),
-				)
 			},
 			want: false,
 		},
@@ -219,15 +169,10 @@ func TestOrderManager_HasUser(t *testing.T) {
 				WhenDouble(repository.FindOneByUserID(
 					AnyContext(),
 					Exact[uint32](3),
-				)).ThenReturn(nil, someErr)
+				)).ThenReturn(nil, someErr).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository orderRepository) {
-				Verify(repository, Once()).FindOneByUserID(
-					AnyContext(),
-					Exact[uint32](3),
-				)
 			},
 			want:    false,
 			wantErr: someErr,
@@ -248,8 +193,6 @@ func TestOrderManager_HasUser(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-
-			tt.verify(repository)
 		})
 	}
 }

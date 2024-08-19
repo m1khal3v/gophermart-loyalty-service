@@ -22,7 +22,6 @@ func TestContainer_List(t *testing.T) {
 		name        string
 		ctx         context.Context
 		manager     func() withdrawalManager
-		verify      func(manager withdrawalManager)
 		status      int
 		response    []responses.Withdrawal
 		errResponse *responses.APIError
@@ -45,23 +44,15 @@ func TestContainer_List(t *testing.T) {
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(true, nil)
+				)).ThenReturn(true, nil).
+					Verify(Once())
 				WhenDouble(manager.FindByUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(channel, nil)
+				)).ThenReturn(channel, nil).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager withdrawalManager) {
-				Verify(manager, Once()).HasUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
-				Verify(manager, Once()).FindByUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
 			},
 			status: http.StatusOK,
 			response: []responses.Withdrawal{
@@ -95,19 +86,10 @@ func TestContainer_List(t *testing.T) {
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(false, nil)
+				)).ThenReturn(false, nil).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager withdrawalManager) {
-				Verify(manager, Once()).HasUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
-				Verify(manager, Never()).FindByUser(
-					AnyContext(),
-					Any[uint32](),
-				)
 			},
 			status:   http.StatusNoContent,
 			response: []responses.Withdrawal{},
@@ -117,16 +99,6 @@ func TestContainer_List(t *testing.T) {
 			ctx:  context.Background(),
 			manager: func() withdrawalManager {
 				return Mock[withdrawalManager]()
-			},
-			verify: func(manager withdrawalManager) {
-				Verify(manager, Never()).HasUser(
-					AnyContext(),
-					Any[uint32](),
-				)
-				Verify(manager, Never()).FindByUser(
-					AnyContext(),
-					Any[uint32](),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -142,19 +114,10 @@ func TestContainer_List(t *testing.T) {
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(false, errors.New("some error"))
+				)).ThenReturn(false, errors.New("some error")).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager withdrawalManager) {
-				Verify(manager, Once()).HasUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
-				Verify(manager, Never()).FindByUser(
-					AnyContext(),
-					Any[uint32](),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -170,23 +133,15 @@ func TestContainer_List(t *testing.T) {
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(true, nil)
+				)).ThenReturn(true, nil).
+					Verify(Once())
 				WhenDouble(manager.FindByUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(nil, errors.New("some error"))
+				)).ThenReturn(nil, errors.New("some error")).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager withdrawalManager) {
-				Verify(manager, Once()).HasUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
-				Verify(manager, Once()).FindByUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -219,8 +174,6 @@ func TestContainer_List(t *testing.T) {
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), response))
 				assert.Equal(t, tt.errResponse, response)
 			}
-
-			tt.verify(manager)
 		})
 	}
 }

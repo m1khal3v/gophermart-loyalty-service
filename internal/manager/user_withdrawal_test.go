@@ -15,7 +15,6 @@ func TestUserWithdrawalManager_Withdraw(t *testing.T) {
 	tests := []struct {
 		name       string
 		repository func() userWithdrawalRepository
-		verify     func(repository userWithdrawalRepository)
 		wantErr    error
 	}{
 		{
@@ -31,17 +30,10 @@ func TestUserWithdrawalManager_Withdraw(t *testing.T) {
 					OrderID: 1,
 					UserID:  1,
 					Sum:     money.New(1.11),
-				}, nil)
+				}, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userWithdrawalRepository) {
-				Verify(repository, Once()).Withdraw(
-					AnyContext(),
-					Exact[uint64](1),
-					Exact[uint32](11),
-					Exact(1.11),
-				)
 			},
 		},
 		{
@@ -53,17 +45,10 @@ func TestUserWithdrawalManager_Withdraw(t *testing.T) {
 					Exact[uint64](2),
 					Exact[uint32](22),
 					Exact(2.22),
-				)).ThenReturn(nil, nil)
+				)).ThenReturn(nil, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userWithdrawalRepository) {
-				Verify(repository, Once()).Withdraw(
-					AnyContext(),
-					Exact[uint64](2),
-					Exact[uint32](22),
-					Exact(2.22),
-				)
 			},
 			wantErr: ErrInsufficientFunds,
 		},
@@ -76,17 +61,10 @@ func TestUserWithdrawalManager_Withdraw(t *testing.T) {
 					Exact[uint64](3),
 					Exact[uint32](33),
 					Exact(3.33),
-				)).ThenReturn(nil, someErr)
+				)).ThenReturn(nil, someErr).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userWithdrawalRepository) {
-				Verify(repository, Once()).Withdraw(
-					AnyContext(),
-					Exact[uint64](3),
-					Exact[uint32](33),
-					Exact(3.33),
-				)
 			},
 			wantErr: someErr,
 		},
@@ -105,8 +83,6 @@ func TestUserWithdrawalManager_Withdraw(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-
-			tt.verify(repository)
 		})
 	}
 }

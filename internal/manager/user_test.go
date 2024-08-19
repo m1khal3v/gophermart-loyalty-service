@@ -19,7 +19,6 @@ func TestUserManager_Register(t *testing.T) {
 	tests := []struct {
 		name       string
 		repository func() userRepository
-		verify     func(repository userRepository)
 		wantToken  bool
 		wantErr    error
 	}{
@@ -33,18 +32,10 @@ func TestUserManager_Register(t *testing.T) {
 						return actual.Login == "login_1" &&
 							actual.Password.CompareWithPassword("password_1") == nil
 					})),
-				)).ThenReturn(nil)
+				)).ThenReturn(nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userRepository) {
-				Verify(repository, Once()).Create(
-					AnyContext(),
-					Match(CreateMatcher("provided user", func(allArgs []any, actual *entity.User) bool {
-						return actual.Login == "login_1" &&
-							actual.Password.CompareWithPassword("password_1") == nil
-					})),
-				)
 			},
 			wantToken: true,
 		},
@@ -58,18 +49,10 @@ func TestUserManager_Register(t *testing.T) {
 						return actual.Login == "login_2" &&
 							actual.Password.CompareWithPassword("password_2") == nil
 					})),
-				)).ThenReturn(gorm.ErrDuplicatedKey)
+				)).ThenReturn(gorm.ErrDuplicatedKey).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userRepository) {
-				Verify(repository, Once()).Create(
-					AnyContext(),
-					Match(CreateMatcher("provided user", func(allArgs []any, actual *entity.User) bool {
-						return actual.Login == "login_2" &&
-							actual.Password.CompareWithPassword("password_2") == nil
-					})),
-				)
 			},
 			wantToken: false,
 			wantErr:   ErrLoginAlreadyExists,
@@ -84,18 +67,10 @@ func TestUserManager_Register(t *testing.T) {
 						return actual.Login == "login_3" &&
 							actual.Password.CompareWithPassword("password_3") == nil
 					})),
-				)).ThenReturn(someErr)
+				)).ThenReturn(someErr).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userRepository) {
-				Verify(repository, Once()).Create(
-					AnyContext(),
-					Match(CreateMatcher("provided user", func(allArgs []any, actual *entity.User) bool {
-						return actual.Login == "login_3" &&
-							actual.Password.CompareWithPassword("password_3") == nil
-					})),
-				)
 			},
 			wantToken: false,
 			wantErr:   someErr,
@@ -124,8 +99,6 @@ func TestUserManager_Register(t *testing.T) {
 			} else {
 				assert.Empty(t, token)
 			}
-
-			tt.verify(repository)
 		})
 	}
 }
@@ -135,7 +108,6 @@ func TestUserManager_Authorize(t *testing.T) {
 	tests := []struct {
 		name       string
 		repository func() userRepository
-		verify     func(repository userRepository)
 		wantToken  bool
 		wantErr    error
 	}{
@@ -150,15 +122,10 @@ func TestUserManager_Authorize(t *testing.T) {
 				)).ThenReturn(&entity.User{
 					Login:    "login_1",
 					Password: password,
-				}, nil)
+				}, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userRepository) {
-				Verify(repository, Once()).FindOneByLogin(
-					AnyContext(),
-					Exact("login_1"),
-				)
 			},
 			wantToken: true,
 		},
@@ -169,15 +136,10 @@ func TestUserManager_Authorize(t *testing.T) {
 				WhenDouble(repository.FindOneByLogin(
 					AnyContext(),
 					Exact("login_2"),
-				)).ThenReturn(nil, nil)
+				)).ThenReturn(nil, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userRepository) {
-				Verify(repository, Once()).FindOneByLogin(
-					AnyContext(),
-					Exact("login_2"),
-				)
 			},
 			wantErr: ErrInvalidCredentials,
 		},
@@ -192,15 +154,10 @@ func TestUserManager_Authorize(t *testing.T) {
 				)).ThenReturn(&entity.User{
 					Login:    "login_3",
 					Password: password,
-				}, nil)
+				}, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userRepository) {
-				Verify(repository, Once()).FindOneByLogin(
-					AnyContext(),
-					Exact("login_3"),
-				)
 			},
 			wantErr: ErrInvalidCredentials,
 		},
@@ -211,15 +168,10 @@ func TestUserManager_Authorize(t *testing.T) {
 				WhenDouble(repository.FindOneByLogin(
 					AnyContext(),
 					Exact("login_4"),
-				)).ThenReturn(nil, someErr)
+				)).ThenReturn(nil, someErr).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userRepository) {
-				Verify(repository, Once()).FindOneByLogin(
-					AnyContext(),
-					Exact("login_4"),
-				)
 			},
 			wantErr: someErr,
 		},
@@ -247,8 +199,6 @@ func TestUserManager_Authorize(t *testing.T) {
 			} else {
 				assert.Empty(t, token)
 			}
-
-			tt.verify(repository)
 		})
 	}
 }
@@ -258,7 +208,6 @@ func TestUserManager_FindByID(t *testing.T) {
 	tests := []struct {
 		name       string
 		repository func() userRepository
-		verify     func(repository userRepository)
 		want       *entity.User
 		wantErr    error
 	}{
@@ -272,15 +221,10 @@ func TestUserManager_FindByID(t *testing.T) {
 				)).ThenReturn(&entity.User{
 					ID:    1,
 					Login: "ivan_ivanov",
-				}, nil)
+				}, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userRepository) {
-				Verify(repository, Once()).FindByID(
-					AnyContext(),
-					Exact[uint32](1),
-				)
 			},
 			want: &entity.User{
 				ID:    1,
@@ -294,15 +238,10 @@ func TestUserManager_FindByID(t *testing.T) {
 				WhenDouble(repository.FindByID(
 					AnyContext(),
 					Exact[uint32](2),
-				)).ThenReturn(nil, nil)
+				)).ThenReturn(nil, nil).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userRepository) {
-				Verify(repository, Once()).FindByID(
-					AnyContext(),
-					Exact[uint32](2),
-				)
 			},
 			wantErr: ErrUserNotFound,
 		},
@@ -313,15 +252,10 @@ func TestUserManager_FindByID(t *testing.T) {
 				WhenDouble(repository.FindByID(
 					AnyContext(),
 					Exact[uint32](3),
-				)).ThenReturn(nil, someErr)
+				)).ThenReturn(nil, someErr).
+					Verify(Once())
 
 				return repository
-			},
-			verify: func(repository userRepository) {
-				Verify(repository, Once()).FindByID(
-					AnyContext(),
-					Exact[uint32](3),
-				)
 			},
 			wantErr: someErr,
 		},
@@ -342,8 +276,6 @@ func TestUserManager_FindByID(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-
-			tt.verify(repository)
 		})
 	}
 }

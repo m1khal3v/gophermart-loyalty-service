@@ -26,7 +26,6 @@ func TestContainer_Withdraw(t *testing.T) {
 		requestString string
 		request       requests.Withdraw
 		manager       func() userWithdrawalManager
-		verify        func(manager userWithdrawalManager)
 		status        int
 		response      *responses.Message
 		errResponse   *responses.APIError
@@ -46,17 +45,10 @@ func TestContainer_Withdraw(t *testing.T) {
 					Exact(uint64(1234566)),
 					Exact(uint32(123)),
 					Exact(123.321),
-				)).ThenReturn(nil)
+				)).ThenReturn(nil).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager userWithdrawalManager) {
-				Verify(manager, Once()).Withdraw(
-					AnyContext(),
-					Exact(uint64(1234566)),
-					Exact(uint32(123)),
-					Exact(123.321),
-				)
 			},
 			status: http.StatusOK,
 			response: &responses.Message{
@@ -73,14 +65,6 @@ func TestContainer_Withdraw(t *testing.T) {
 			},
 			manager: func() userWithdrawalManager {
 				return Mock[userWithdrawalManager]()
-			},
-			verify: func(manager userWithdrawalManager) {
-				Verify(manager, Never()).Withdraw(
-					AnyContext(),
-					Any[uint64](),
-					Any[uint32](),
-					Any[float64](),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -99,14 +83,6 @@ func TestContainer_Withdraw(t *testing.T) {
 			manager: func() userWithdrawalManager {
 				return Mock[userWithdrawalManager]()
 			},
-			verify: func(manager userWithdrawalManager) {
-				Verify(manager, Never()).Withdraw(
-					AnyContext(),
-					Any[uint64](),
-					Any[uint32](),
-					Any[float64](),
-				)
-			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
 				Code:    http.StatusBadRequest,
@@ -121,14 +97,6 @@ func TestContainer_Withdraw(t *testing.T) {
 			manager: func() userWithdrawalManager {
 				return Mock[userWithdrawalManager]()
 			},
-			verify: func(manager userWithdrawalManager) {
-				Verify(manager, Never()).Withdraw(
-					AnyContext(),
-					Any[uint64](),
-					Any[uint32](),
-					Any[float64](),
-				)
-			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
 				Code:    http.StatusBadRequest,
@@ -142,14 +110,6 @@ func TestContainer_Withdraw(t *testing.T) {
 			requestString: `{"order": "123456", "money": 123.321}`,
 			manager: func() userWithdrawalManager {
 				return Mock[userWithdrawalManager]()
-			},
-			verify: func(manager userWithdrawalManager) {
-				Verify(manager, Never()).Withdraw(
-					AnyContext(),
-					Any[uint64](),
-					Any[uint32](),
-					Any[float64](),
-				)
 			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
@@ -168,14 +128,6 @@ func TestContainer_Withdraw(t *testing.T) {
 			manager: func() userWithdrawalManager {
 				return Mock[userWithdrawalManager]()
 			},
-			verify: func(manager userWithdrawalManager) {
-				Verify(manager, Never()).Withdraw(
-					AnyContext(),
-					Any[uint64](),
-					Any[uint32](),
-					Any[float64](),
-				)
-			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
 				Code:    http.StatusBadRequest,
@@ -193,14 +145,6 @@ func TestContainer_Withdraw(t *testing.T) {
 			manager: func() userWithdrawalManager {
 				return Mock[userWithdrawalManager]()
 			},
-			verify: func(manager userWithdrawalManager) {
-				Verify(manager, Never()).Withdraw(
-					AnyContext(),
-					Any[uint64](),
-					Any[uint32](),
-					Any[float64](),
-				)
-			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
 				Code:    http.StatusBadRequest,
@@ -217,14 +161,6 @@ func TestContainer_Withdraw(t *testing.T) {
 			},
 			manager: func() userWithdrawalManager {
 				return Mock[userWithdrawalManager]()
-			},
-			verify: func(manager userWithdrawalManager) {
-				Verify(manager, Never()).Withdraw(
-					AnyContext(),
-					Any[uint64](),
-					Any[uint32](),
-					Any[float64](),
-				)
 			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
@@ -247,17 +183,10 @@ func TestContainer_Withdraw(t *testing.T) {
 					Exact(uint64(1234566)),
 					Exact(uint32(123)),
 					Exact(123.321),
-				)).ThenReturn(managers.ErrInsufficientFunds)
+				)).ThenReturn(managers.ErrInsufficientFunds).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager userWithdrawalManager) {
-				Verify(manager, Once()).Withdraw(
-					AnyContext(),
-					Exact(uint64(1234566)),
-					Exact(uint32(123)),
-					Exact(123.321),
-				)
 			},
 			status: http.StatusPaymentRequired,
 			errResponse: &responses.APIError{
@@ -280,17 +209,10 @@ func TestContainer_Withdraw(t *testing.T) {
 					Exact(uint64(1234566)),
 					Exact(uint32(123)),
 					Exact(123.321),
-				)).ThenReturn(errors.New("some error"))
+				)).ThenReturn(errors.New("some error")).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager userWithdrawalManager) {
-				Verify(manager, Once()).Withdraw(
-					AnyContext(),
-					Exact(uint64(1234566)),
-					Exact(uint32(123)),
-					Exact(123.321),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -333,8 +255,6 @@ func TestContainer_Withdraw(t *testing.T) {
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), response))
 				assert.Equal(t, tt.errResponse, response)
 			}
-
-			tt.verify(manager)
 		})
 	}
 }

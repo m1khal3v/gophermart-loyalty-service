@@ -21,7 +21,6 @@ func TestContainer_Balance(t *testing.T) {
 		name        string
 		ctx         context.Context
 		manager     func() userManager
-		verify      func(manager userManager)
 		status      int
 		response    *responses.Balance
 		errResponse *responses.APIError
@@ -37,15 +36,10 @@ func TestContainer_Balance(t *testing.T) {
 				)).ThenReturn(&entity.User{
 					Balance:   money.New(123.32),
 					Withdrawn: money.New(321.12),
-				}, nil)
+				}, nil).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager userManager) {
-				Verify(manager, Once()).FindByID(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
 			},
 			status: http.StatusOK,
 			response: &responses.Balance{
@@ -58,12 +52,6 @@ func TestContainer_Balance(t *testing.T) {
 			ctx:  context.Background(),
 			manager: func() userManager {
 				return Mock[userManager]()
-			},
-			verify: func(manager userManager) {
-				Verify(manager, Never()).FindByID(
-					AnyContext(),
-					Any[uint32](),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -79,15 +67,10 @@ func TestContainer_Balance(t *testing.T) {
 				WhenDouble(manager.FindByID(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(nil, errors.New("db unavailable"))
+				)).ThenReturn(nil, errors.New("db unavailable")).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager userManager) {
-				Verify(manager, Once()).FindByID(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -120,8 +103,6 @@ func TestContainer_Balance(t *testing.T) {
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), response))
 				assert.Equal(t, tt.errResponse, response)
 			}
-
-			tt.verify(manager)
 		})
 	}
 }

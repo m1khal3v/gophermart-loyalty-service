@@ -22,7 +22,6 @@ func TestContainer_Register(t *testing.T) {
 		requestString string
 		request       requests.Register
 		manager       func() userManager
-		verify        func(manager userManager)
 		status        int
 		token         string
 		response      *responses.Auth
@@ -41,16 +40,10 @@ func TestContainer_Register(t *testing.T) {
 					AnyContext(),
 					Exact("ivan_ivanov"),
 					Exact("$uP3R$3cR3t"),
-				)).ThenReturn("t0k3n", nil)
+				)).ThenReturn("t0k3n", nil).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager userManager) {
-				Verify(manager, Once()).Register(
-					AnyContext(),
-					Exact("ivan_ivanov"),
-					Exact("$uP3R$3cR3t"),
-				)
 			},
 			status: http.StatusOK,
 			token:  "Bearer t0k3n",
@@ -68,13 +61,6 @@ func TestContainer_Register(t *testing.T) {
 			manager: func() userManager {
 				return Mock[userManager]()
 			},
-			verify: func(manager userManager) {
-				Verify(manager, Never()).Register(
-					AnyContext(),
-					AnyString(),
-					AnyString(),
-				)
-			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
 				Code:    http.StatusBadRequest,
@@ -87,13 +73,6 @@ func TestContainer_Register(t *testing.T) {
 			requestString: "{login: ivan_ivanov, password: $uP3R$3cR3t}",
 			manager: func() userManager {
 				return Mock[userManager]()
-			},
-			verify: func(manager userManager) {
-				Verify(manager, Never()).Register(
-					AnyContext(),
-					AnyString(),
-					AnyString(),
-				)
 			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
@@ -108,13 +87,6 @@ func TestContainer_Register(t *testing.T) {
 			manager: func() userManager {
 				return Mock[userManager]()
 			},
-			verify: func(manager userManager) {
-				Verify(manager, Never()).Register(
-					AnyContext(),
-					AnyString(),
-					AnyString(),
-				)
-			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
 				Code:    http.StatusBadRequest,
@@ -127,13 +99,6 @@ func TestContainer_Register(t *testing.T) {
 			requestString: `{"login": "ivan_ivanov", "password": "$uP3"}`,
 			manager: func() userManager {
 				return Mock[userManager]()
-			},
-			verify: func(manager userManager) {
-				Verify(manager, Never()).Register(
-					AnyContext(),
-					AnyString(),
-					AnyString(),
-				)
 			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
@@ -148,13 +113,6 @@ func TestContainer_Register(t *testing.T) {
 			manager: func() userManager {
 				return Mock[userManager]()
 			},
-			verify: func(manager userManager) {
-				Verify(manager, Never()).Register(
-					AnyContext(),
-					AnyString(),
-					AnyString(),
-				)
-			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
 				Code:    http.StatusBadRequest,
@@ -167,13 +125,6 @@ func TestContainer_Register(t *testing.T) {
 			requestString: `{"login": "ivan=ivanov", "password": "$uP3rS3cr3t"}`,
 			manager: func() userManager {
 				return Mock[userManager]()
-			},
-			verify: func(manager userManager) {
-				Verify(manager, Never()).Register(
-					AnyContext(),
-					AnyString(),
-					AnyString(),
-				)
 			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
@@ -194,16 +145,10 @@ func TestContainer_Register(t *testing.T) {
 					AnyContext(),
 					Exact("ivan_ivanov"),
 					Exact("$uP3R$3cR3t"),
-				)).ThenReturn("", managers.ErrLoginAlreadyExists)
+				)).ThenReturn("", managers.ErrLoginAlreadyExists).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager userManager) {
-				Verify(manager, Once()).Register(
-					AnyContext(),
-					Exact("ivan_ivanov"),
-					Exact("$uP3R$3cR3t"),
-				)
 			},
 			status: http.StatusConflict,
 			errResponse: &responses.APIError{
@@ -224,16 +169,10 @@ func TestContainer_Register(t *testing.T) {
 					AnyContext(),
 					Exact("ivan_ivanov"),
 					Exact("$uP3R$3cR3t"),
-				)).ThenReturn("", errors.New("some error"))
+				)).ThenReturn("", errors.New("some error")).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager userManager) {
-				Verify(manager, Once()).Register(
-					AnyContext(),
-					Exact("ivan_ivanov"),
-					Exact("$uP3R$3cR3t"),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -277,8 +216,6 @@ func TestContainer_Register(t *testing.T) {
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), response))
 				assert.Equal(t, tt.errResponse, response)
 			}
-
-			tt.verify(manager)
 		})
 	}
 }

@@ -26,7 +26,6 @@ func TestContainer_Register(t *testing.T) {
 		contentType     string
 		orderID         uint64
 		manager         func() orderManager
-		verify          func(manager orderManager)
 		status          int
 		messageResponse *responses.Message
 		errResponse     *responses.APIError
@@ -46,16 +45,10 @@ func TestContainer_Register(t *testing.T) {
 					ID:     1234566,
 					UserID: 123,
 					Status: entity.OrderStatusNew,
-				}, nil)
+				}, nil).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager orderManager) {
-				Verify(manager, Once()).Register(
-					AnyContext(),
-					Exact(uint64(1234566)),
-					Exact(uint32(123)),
-				)
 			},
 			status: http.StatusAccepted,
 			messageResponse: &responses.Message{
@@ -77,16 +70,10 @@ func TestContainer_Register(t *testing.T) {
 					ID:     1234566,
 					UserID: 123,
 					Status: entity.OrderStatusNew,
-				}, managers.ErrOrderAlreadyRegisteredByCurrentUser)
+				}, managers.ErrOrderAlreadyRegisteredByCurrentUser).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager orderManager) {
-				Verify(manager, Once()).Register(
-					AnyContext(),
-					Exact(uint64(1234566)),
-					Exact(uint32(123)),
-				)
 			},
 			status: http.StatusOK,
 			messageResponse: &responses.Message{
@@ -108,16 +95,10 @@ func TestContainer_Register(t *testing.T) {
 					ID:     1234566,
 					UserID: 123,
 					Status: entity.OrderStatusNew,
-				}, managers.ErrOrderAlreadyRegisteredByAnotherUser)
+				}, managers.ErrOrderAlreadyRegisteredByAnotherUser).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager orderManager) {
-				Verify(manager, Once()).Register(
-					AnyContext(),
-					Exact(uint64(1234566)),
-					Exact(uint32(123)),
-				)
 			},
 			status: http.StatusConflict,
 			errResponse: &responses.APIError{
@@ -140,16 +121,10 @@ func TestContainer_Register(t *testing.T) {
 					ID:     1234566,
 					UserID: 123,
 					Status: entity.OrderStatusNew,
-				}, errors.New("some error"))
+				}, errors.New("some error")).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager orderManager) {
-				Verify(manager, Once()).Register(
-					AnyContext(),
-					Exact(uint64(1234566)),
-					Exact(uint32(123)),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -165,13 +140,6 @@ func TestContainer_Register(t *testing.T) {
 			manager: func() orderManager {
 				return Mock[orderManager]()
 			},
-			verify: func(manager orderManager) {
-				Verify(manager, Never()).Register(
-					AnyContext(),
-					Any[uint64](),
-					Any[uint32](),
-				)
-			},
 			status: http.StatusBadRequest,
 			errResponse: &responses.APIError{
 				Code:    http.StatusBadRequest,
@@ -186,13 +154,6 @@ func TestContainer_Register(t *testing.T) {
 			manager: func() orderManager {
 				return Mock[orderManager]()
 			},
-			verify: func(manager orderManager) {
-				Verify(manager, Never()).Register(
-					AnyContext(),
-					Any[uint64](),
-					Any[uint32](),
-				)
-			},
 			status: http.StatusUnprocessableEntity,
 			errResponse: &responses.APIError{
 				Code:    http.StatusUnprocessableEntity,
@@ -205,13 +166,6 @@ func TestContainer_Register(t *testing.T) {
 			contentType: "text/plain",
 			manager: func() orderManager {
 				return Mock[orderManager]()
-			},
-			verify: func(manager orderManager) {
-				Verify(manager, Never()).Register(
-					AnyContext(),
-					Any[uint64](),
-					Any[uint32](),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -255,8 +209,6 @@ func TestContainer_Register(t *testing.T) {
 
 			_, ok := queue.Pop()
 			require.False(t, ok)
-
-			tt.verify(manager)
 		})
 	}
 }

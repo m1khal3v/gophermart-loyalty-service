@@ -24,7 +24,6 @@ func TestContainer_List(t *testing.T) {
 		name        string
 		ctx         context.Context
 		manager     func() orderManager
-		verify      func(manager orderManager)
 		status      int
 		response    []responses.Order
 		errResponse *responses.APIError
@@ -62,23 +61,15 @@ func TestContainer_List(t *testing.T) {
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(true, nil)
+				)).ThenReturn(true, nil).
+					Verify(Once())
 				WhenDouble(manager.FindByUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(channel, nil)
+				)).ThenReturn(channel, nil).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager orderManager) {
-				Verify(manager, Once()).HasUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
-				Verify(manager, Once()).FindByUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
 			},
 			status: http.StatusOK,
 			response: []responses.Order{
@@ -113,19 +104,10 @@ func TestContainer_List(t *testing.T) {
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(false, nil)
+				)).ThenReturn(false, nil).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager orderManager) {
-				Verify(manager, Once()).HasUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
-				Verify(manager, Never()).FindByUser(
-					AnyContext(),
-					Any[uint32](),
-				)
 			},
 			status:   http.StatusNoContent,
 			response: []responses.Order{},
@@ -135,16 +117,6 @@ func TestContainer_List(t *testing.T) {
 			ctx:  context.Background(),
 			manager: func() orderManager {
 				return Mock[orderManager]()
-			},
-			verify: func(manager orderManager) {
-				Verify(manager, Never()).HasUser(
-					AnyContext(),
-					Any[uint32](),
-				)
-				Verify(manager, Never()).FindByUser(
-					AnyContext(),
-					Any[uint32](),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -160,19 +132,10 @@ func TestContainer_List(t *testing.T) {
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(false, errors.New("some error"))
+				)).ThenReturn(false, errors.New("some error")).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager orderManager) {
-				Verify(manager, Once()).HasUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
-				Verify(manager, Never()).FindByUser(
-					AnyContext(),
-					Any[uint32](),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -188,23 +151,15 @@ func TestContainer_List(t *testing.T) {
 				WhenDouble(manager.HasUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(true, nil)
+				)).ThenReturn(true, nil).
+					Verify(Once())
 				WhenDouble(manager.FindByUser(
 					AnyContext(),
 					Exact(uint32(123)),
-				)).ThenReturn(nil, errors.New("some error"))
+				)).ThenReturn(nil, errors.New("some error")).
+					Verify(Once())
 
 				return manager
-			},
-			verify: func(manager orderManager) {
-				Verify(manager, Once()).HasUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
-				Verify(manager, Once()).FindByUser(
-					AnyContext(),
-					Exact(uint32(123)),
-				)
 			},
 			status: http.StatusInternalServerError,
 			errResponse: &responses.APIError{
@@ -237,8 +192,6 @@ func TestContainer_List(t *testing.T) {
 				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), response))
 				assert.Equal(t, tt.errResponse, response)
 			}
-
-			tt.verify(manager)
 		})
 	}
 }
