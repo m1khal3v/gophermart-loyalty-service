@@ -27,8 +27,21 @@ jobs:
           --health-retries 5
 
     steps:
+      - name: Install jq
+        uses: dcarbone/install-jq-action@v2
+
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Setup Goose
+        uses: mscno/setup-goose@v1
+
+      - name: Migrate DB
+        env:
+          GOOSE_DRIVER: postgres
+          GOOSE_DBSTRING: "host=postgres user=postgres password=postgres dbname=praktikum sslmode=disable"
+          GOOSE_MIGRATION_DIR: "./migrations/pgsql"
+        run: goose up
 
       - name: Download autotests binaries
         uses: robinraju/release-downloader@v1.8
@@ -52,11 +65,19 @@ jobs:
 
       - name: Test
         run: |
+          go test -v ./...
+
+      - name: Test race
+        run: |
+          go test -v -race ./...
+
+      - name: Test Practicum
+        run: |
           gophermarttest \
             -test.v -test.run=^TestGophermart$ \
             -gophermart-binary-path=cmd/gophermart/gophermart \
             -gophermart-host=localhost \
-            -gophermart-port=8080 \
+            -gophermart-port=$(random unused-port) \
             -gophermart-database-uri="postgresql://postgres:postgres@postgres/praktikum?sslmode=disable" \
             -accrual-binary-path=cmd/accrual/accrual_linux_amd64 \
             -accrual-host=localhost \

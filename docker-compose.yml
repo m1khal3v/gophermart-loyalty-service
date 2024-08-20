@@ -1,0 +1,48 @@
+name: gophermart-loyalty
+
+services:
+  pgsql:
+    image: postgres:16
+    restart: unless-stopped
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  goose:
+    image: ghcr.io/kukymbr/goose-docker:3.21.1
+    restart: no
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: host=pgsql port=5432 user=postgres password=postgres dbname=postgres
+      GOOSE_VERBOSE: true
+    volumes:
+      - ./migrations/pgsql:/migrations
+
+  service:
+    depends_on:
+      goose:
+        condition: service_completed_successfully
+    build:
+      context: .
+      dockerfile: .docker/service/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URI: postgres://postgres:postgres@pgsql:5432/postgres?sslmode=disable
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres:
