@@ -9,6 +9,7 @@ import (
 )
 
 var ErrOrderNotFound = errors.New("order not found")
+var ErrAccrueFailed = errors.New("failed to accrue")
 
 type UserOrderRepository struct {
 	db *gorm.DB
@@ -42,8 +43,12 @@ func (userOrderRepository *UserOrderRepository) Accrue(ctx context.Context, orde
 			return nil
 		}
 
-		if ok, err := userRepository.Accrue(ctx, order.UserID, accrual); err != nil || !ok {
+		ok, err := userRepository.Accrue(ctx, order.UserID, accrual)
+		if err != nil {
 			return err
+		}
+		if !ok {
+			return ErrAccrueFailed
 		}
 
 		return nil
