@@ -28,6 +28,7 @@ func main() {
 		zap.String("cpu_profile_file", config.CPUProfileFile),
 		zap.Duration("cpu_profile_duration", config.CPUProfileDuration),
 		zap.String("mem_profile_file", config.MemProfileFile),
+		zap.Duration("shutdown_timeout", config.ShutdownTimeout),
 	)
 
 	if app, err := app.New(config); err == nil {
