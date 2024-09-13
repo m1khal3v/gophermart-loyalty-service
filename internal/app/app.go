@@ -4,6 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/client"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/config"
@@ -22,18 +29,15 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/repository"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/router"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/server"
+	"github.com/m1khal3v/gophermart-loyalty-service/pkg/pprof"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"net/http"
-	"os/signal"
-	"sync"
-	"syscall"
-	"time"
 )
 
 type app struct {
+	config              *config.Config
 	server              *http.Server
 	retrieverProcessor  *retrieverProcessor.Processor
 	routerProcessor     *routerProcessor.Processor
@@ -99,6 +103,7 @@ func New(config *config.Config) (*app, error) {
 	}
 
 	return &app{
+		config: config,
 		server: server.New(config.RunAddress, router),
 		retrieverProcessor: retrieverProcessor.NewProcessor(client, orderQueue, routerQueue, &retrieverProcessor.Config{
 			Concurrency: config.RetrieverConcurrency,
@@ -130,7 +135,7 @@ func (app *app) Run() {
 	defer errCancel(nil)
 
 	var wg sync.WaitGroup
-	wg.Add(6)
+	wg.Add(8)
 	go func() {
 		defer wg.Done()
 		if err := app.server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
@@ -167,6 +172,28 @@ func (app *app) Run() {
 			errCancel(fmt.Errorf("processed processor error: %w", err))
 		}
 	}()
+	go func() {
+		defer wg.Done()
+		app.hookSignal(suspendCtx, syscall.SIGUSR1, func() {
+			logger.Logger.Info("SIGUSR1 received. starting CPU profile capture...")
+			if err := pprof.CPUCapture(suspendCtx, app.config.CPUProfileFile, app.config.CPUProfileDuration); err != nil {
+				logger.Logger.Warn("cpu profile capture failed", zap.Error(err))
+			} else {
+				logger.Logger.Info("cpu profile capture finished")
+			}
+		})
+	}()
+	go func() {
+		defer wg.Done()
+		app.hookSignal(suspendCtx, syscall.SIGUSR2, func() {
+			logger.Logger.Info("SIGUSR2 received. starting memory profile capture...")
+			if err := pprof.Capture(pprof.Heap, app.config.MemProfileFile); err != nil {
+				logger.Logger.Warn("mem profile capture failed", zap.Error(err))
+			} else {
+				logger.Logger.Info("memory profile capture finished")
+			}
+		})
+	}()
 
 	select {
 	case <-errCtx.Done():
@@ -176,7 +203,7 @@ func (app *app) Run() {
 		logger.Logger.Info("Received suspend signal.")
 	}
 
-	timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), app.config.ShutdownTimeout)
 	defer cancel()
 
 	logger.Logger.Info("Trying to shutdown server gracefully...")
@@ -188,4 +215,19 @@ func (app *app) Run() {
 
 	logger.Logger.Info("Waiting for all goroutines to finish...")
 	wg.Wait()
+}
+
+func (app *app) hookSignal(ctx context.Context, target syscall.Signal, function func()) {
+	channel := make(chan os.Signal, 1)
+	defer close(channel)
+
+	signal.Notify(channel, target)
+	for {
+		select {
+		case <-channel:
+			function()
+		case <-ctx.Done():
+			return
+		}
+	}
 }

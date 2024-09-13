@@ -2,12 +2,13 @@ package balance
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/context"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/requests"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/responses"
-	"net/http"
 )
 
 func (container *Container) Withdraw(writer http.ResponseWriter, request *http.Request) {

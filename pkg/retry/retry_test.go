@@ -2,9 +2,10 @@ package retry
 
 import (
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_pow(t *testing.T) {

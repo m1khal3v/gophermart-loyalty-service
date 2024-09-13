@@ -2,8 +2,9 @@ package generator
 
 import (
 	"context"
-	"golang.org/x/exp/maps"
 	"sync"
+
+	"golang.org/x/exp/maps"
 )
 
 type keyValueModifier[K comparable, T any] func(key K, value T) (K, T)

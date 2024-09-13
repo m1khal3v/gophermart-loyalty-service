@@ -3,11 +3,12 @@ package manager
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	. "github.com/ovechkin-dm/mockio/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestOrderManager_Register(t *testing.T) {

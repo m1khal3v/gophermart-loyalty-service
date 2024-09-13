@@ -1,11 +1,12 @@
 package middleware
 
 import (
+	"net/http"
+	"strings"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/context"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
-	"net/http"
-	"strings"
 )
 
 func ValidateAuthorizationToken(jwt *jwt.Container) func(next http.Handler) http.Handler {

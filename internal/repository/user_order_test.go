@@ -2,15 +2,16 @@ package repository
 
 import (
 	"context"
+	"math/rand/v2"
+	"testing"
+	"time"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	gormerr "gorm.io/gorm"
-	"math/rand/v2"
-	"testing"
-	"time"
 )
 
 func TestUserOrderRepository_AccrueOK(t *testing.T) {

@@ -2,14 +2,15 @@ package order
 
 import (
 	"errors"
+	"io"
+	"net/http"
+	"strconv"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/context"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/responses"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/validator"
-	"io"
-	"net/http"
-	"strconv"
 )
 
 func (container *Container) Register(writer http.ResponseWriter, request *http.Request) {

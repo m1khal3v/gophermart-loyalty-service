@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/bcrypt"
@@ -11,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
-	"testing"
 )
 
 func TestUserManager_Register(t *testing.T) {

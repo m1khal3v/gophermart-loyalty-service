@@ -2,11 +2,12 @@ package controller
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/asaskevich/govalidator"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/responses"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 func DecodeAndValidateJSONRequest[T any](request *http.Request, writer http.ResponseWriter) (*T, bool) {

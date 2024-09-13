@@ -3,10 +3,11 @@ package manager
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	. "github.com/ovechkin-dm/mockio/mock"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestWithdrawalManager_HasUser(t *testing.T) {

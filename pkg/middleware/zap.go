@@ -2,10 +2,11 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5/middleware"
-	"go.uber.org/zap"
 	"net/http"
 	"time"
+
+	"github.com/go-chi/chi/v5/middleware"
+	"go.uber.org/zap"
 )
 
 func ZapLogRequest(logger *zap.Logger, name string) func(next http.Handler) http.Handler {

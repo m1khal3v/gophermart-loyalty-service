@@ -25,6 +25,10 @@ func main() {
 		zap.Uint64("processed_concurrency", config.ProcessedConcurrency),
 		zap.Uint64("update_batch_size", config.UpdateBatchSize),
 		zap.String("log_level", config.LogLevel),
+		zap.String("cpu_profile_file", config.CPUProfileFile),
+		zap.Duration("cpu_profile_duration", config.CPUProfileDuration),
+		zap.String("mem_profile_file", config.MemProfileFile),
+		zap.Duration("shutdown_timeout", config.ShutdownTimeout),
 	)
 
 	if app, err := app.New(config); err == nil {

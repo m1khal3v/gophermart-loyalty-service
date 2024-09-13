@@ -4,10 +4,11 @@ package generator
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewFromFunctionWithContext(t *testing.T) {

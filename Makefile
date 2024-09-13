@@ -33,3 +33,9 @@ diff: ## Generate diff migration
 	docker compose -f atlas.yml run --rm atlas migrate hash --env gorm && \
 	docker compose -f atlas.yml run --rm atlas migrate diff migration --env gorm && \
 	docker compose -f atlas.yml down --remove-orphans
+
+pprof-cpu: ## Capture CPU pprof profile
+	docker compose kill -s SIGUSR1 service
+
+pprof-mem: ## Capture memory pprof profile
+	docker compose kill -s SIGUSR2 service

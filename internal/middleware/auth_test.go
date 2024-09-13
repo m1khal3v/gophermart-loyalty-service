@@ -2,14 +2,15 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/context"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"math/rand/v2"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/context"
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestValidateAuthorizationTokenOk(t *testing.T) {

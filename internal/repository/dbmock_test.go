@@ -1,10 +1,11 @@
 package repository
 
 import (
+	"testing"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"testing"
 )
 
 func NewDBMock(t *testing.T) (*gorm.DB, sqlmock.Sqlmock) {

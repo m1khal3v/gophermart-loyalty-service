@@ -1,6 +1,8 @@
 package router
 
 import (
+	"time"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
@@ -13,7 +15,6 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
 	internalMiddleware "github.com/m1khal3v/gophermart-loyalty-service/internal/middleware"
 	pkgMiddleware "github.com/m1khal3v/gophermart-loyalty-service/pkg/middleware"
-	"time"
 )
 
 func New(

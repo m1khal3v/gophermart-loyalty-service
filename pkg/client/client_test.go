@@ -5,15 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/http/retryafter"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/requests"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/responses"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
-	"net/http"
-	"testing"
-	"time"
 )
 
 func TestClient_Register(t *testing.T) {

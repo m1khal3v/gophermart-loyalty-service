@@ -1,15 +1,16 @@
 package middleware
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestZapLogRequest(t *testing.T) {

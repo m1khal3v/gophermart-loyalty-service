@@ -6,14 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/http/retryafter"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
+	"github.com/m1khal3v/gophermart-loyalty-service/pkg/http/retryafter"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClient_GetAccrual(t *testing.T) {

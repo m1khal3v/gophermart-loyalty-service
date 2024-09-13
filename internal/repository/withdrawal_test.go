@@ -2,12 +2,13 @@ package repository
 
 import (
 	"context"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"math/rand/v2"
 	"testing"
 	"time"
+
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWithdrawalRepository_FindOneByUserID(t *testing.T) {

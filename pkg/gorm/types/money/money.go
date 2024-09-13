@@ -3,9 +3,10 @@ package money
 import (
 	"context"
 	"fmt"
+	"math"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"math"
 )
 
 const precision = 2

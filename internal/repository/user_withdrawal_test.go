@@ -2,12 +2,13 @@ package repository
 
 import (
 	"context"
+	"math/rand/v2"
+	"testing"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"math/rand/v2"
-	"testing"
 )
 
 func TestUserWithdrawalRepository_Withdraw(t *testing.T) {

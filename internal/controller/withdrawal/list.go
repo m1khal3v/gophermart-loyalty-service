@@ -1,11 +1,12 @@
 package withdrawal
 
 import (
+	"net/http"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/context"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/responses"
-	"net/http"
 )
 
 func (container *Container) List(writer http.ResponseWriter, request *http.Request) {

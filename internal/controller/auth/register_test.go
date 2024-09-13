@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	managers "github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/requests"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/responses"
 	. "github.com/ovechkin-dm/mockio/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestContainer_Register(t *testing.T) {
