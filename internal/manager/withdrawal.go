@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 )
 

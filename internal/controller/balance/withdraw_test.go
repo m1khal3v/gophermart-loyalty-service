@@ -5,6 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	userContext "github.com/m1khal3v/gophermart-loyalty-service/internal/context"
 	managers "github.com/m1khal3v/gophermart-loyalty-service/internal/manager"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/requests"
@@ -13,9 +17,6 @@ import (
 	. "github.com/ovechkin-dm/mockio/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestContainer_Withdraw(t *testing.T) {

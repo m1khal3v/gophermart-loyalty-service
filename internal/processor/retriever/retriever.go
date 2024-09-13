@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync/atomic"
+	"time"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/client"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/semaphore"
 	"go.uber.org/zap"
-	"sync/atomic"
-	"time"
 )
 
 const DefaultConcurrency = 10

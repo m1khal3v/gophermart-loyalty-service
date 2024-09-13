@@ -3,13 +3,14 @@ package repository
 import (
 	"context"
 	"database/sql/driver"
+	"math/rand/v2"
+	"testing"
+	"time"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"math/rand/v2"
-	"testing"
-	"time"
 )
 
 func TestUserRepository_FindOneByLogin(t *testing.T) {

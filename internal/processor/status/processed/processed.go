@@ -2,12 +2,13 @@ package processed
 
 import (
 	"context"
+	"time"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/logger"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/semaphore"
 	"go.uber.org/zap"
-	"time"
 )
 
 const DefaultConcurrency = 10

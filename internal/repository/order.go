@@ -2,9 +2,10 @@ package repository
 
 import (
 	"context"
+	"time"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"gorm.io/gorm"
-	"time"
 )
 
 type OrderRepository struct {

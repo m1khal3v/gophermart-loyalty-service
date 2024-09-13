@@ -1,8 +1,9 @@
 package entity
 
 import (
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
 	"time"
+
+	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
 )
 
 const (

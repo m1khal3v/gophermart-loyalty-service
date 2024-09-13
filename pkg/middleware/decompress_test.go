@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
-	"github.com/go-chi/chi/v5"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"math/rand/v2"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDecompress(t *testing.T) {

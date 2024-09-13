@@ -1,9 +1,10 @@
 package entity
 
 import (
+	"time"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/bcrypt"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/money"
-	"time"
 )
 
 type User struct {

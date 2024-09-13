@@ -2,13 +2,14 @@ package router
 
 import (
 	"context"
+	"math/rand/v2"
+	"testing"
+	"time"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/accrual/responses"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/queue"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"math/rand/v2"
-	"testing"
-	"time"
 )
 
 func TestProcessor_processAccrualRegistered(t *testing.T) {

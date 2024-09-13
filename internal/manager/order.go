@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"errors"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 )
 

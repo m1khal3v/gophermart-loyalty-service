@@ -18,6 +18,9 @@ cmd/gophermart/gophermart
 # Dependency directories (remove the comment below to include it)
 vendor/
 
+#pprof
+profiles/
+
 # IDEs directories
 .idea
 .vscode

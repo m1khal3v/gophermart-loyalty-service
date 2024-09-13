@@ -41,6 +41,10 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URI: postgres://postgres:postgres@pgsql:5432/postgres?sslmode=disable
+      CPU_PROFILE_FILE: "/app/profiles/cpu.pprof"
+      MEM_PROFILE_FILE: "/app/profiles/mem.pprof"
+    volumes:
+      - "./profiles:/app/profiles"
     ports:
       - "8080:8080"
 

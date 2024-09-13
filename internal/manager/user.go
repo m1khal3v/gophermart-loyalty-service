@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"errors"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/entity"
 	"github.com/m1khal3v/gophermart-loyalty-service/internal/jwt"
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/gorm/types/bcrypt"

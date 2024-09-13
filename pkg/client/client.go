@@ -6,17 +6,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/http/retryafter"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/requests"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/responses"
-	"github.com/m1khal3v/gophermart-loyalty-service/pkg/retry"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/m1khal3v/gophermart-loyalty-service/pkg/http/retryafter"
+	"github.com/m1khal3v/gophermart-loyalty-service/pkg/requests"
+	"github.com/m1khal3v/gophermart-loyalty-service/pkg/responses"
+	"github.com/m1khal3v/gophermart-loyalty-service/pkg/retry"
 )
 
 // This is a very simplified regular expression that will work in most cases.

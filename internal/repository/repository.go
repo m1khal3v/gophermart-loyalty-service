@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/generator"
 	"gorm.io/gorm"
 )

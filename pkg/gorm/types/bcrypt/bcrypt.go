@@ -3,6 +3,7 @@ package bcrypt
 import (
 	"database/sql/driver"
 	"fmt"
+
 	"golang.org/x/crypto/bcrypt"
 )
 

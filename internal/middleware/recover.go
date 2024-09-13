@@ -2,8 +2,9 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller"
 	"net/http"
+
+	"github.com/m1khal3v/gophermart-loyalty-service/internal/controller"
 )
 
 func Recover() func(next http.Handler) http.Handler {

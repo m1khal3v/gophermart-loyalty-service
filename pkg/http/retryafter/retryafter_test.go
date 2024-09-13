@@ -1,10 +1,11 @@
 package retryafter
 
 import (
-	"github.com/stretchr/testify/assert"
 	"math/rand/v2"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParse(t *testing.T) {

@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
-	"golang.org/x/exp/maps"
 	"io"
 	"net/http"
 	"strings"
 	"sync"
+
+	"golang.org/x/exp/maps"
 )
 
 type decoderPool struct {
