@@ -33,6 +33,16 @@ func newConfig(address string, options ...ConfigOption) *config {
 		transport:         http.DefaultTransport,
 	}
 
+	resolveAddress(address, config)
+
+	for _, option := range options {
+		option(config)
+	}
+
+	return config
+}
+
+func resolveAddress(address string, config *config) {
 	if strings.Contains(address, "://") {
 		url, err := url.Parse(address)
 		if err != nil {
@@ -57,12 +67,6 @@ func newConfig(address string, options ...ConfigOption) *config {
 			config.port = port
 		}
 	}
-
-	for _, option := range options {
-		option(config)
-	}
-
-	return config
 }
 
 func WithScheme(scheme string) ConfigOption {
