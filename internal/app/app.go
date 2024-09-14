@@ -95,12 +95,7 @@ func New(config *config.Config) (*app, error) {
 	router := router.New(config.AppEnv == "prod", authRoutes, orderRoutes, balanceRoutes, withdrawalRoutes, jwt)
 
 	// Accrual
-	client, err := client.New(&client.Config{
-		Address: config.AccrualSystemAddress,
-	})
-	if err != nil {
-		return nil, err
-	}
+	client := client.New(config.AccrualSystemAddress)
 
 	return &app{
 		config: config,
