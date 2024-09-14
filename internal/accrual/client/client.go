@@ -3,8 +3,10 @@ package client
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -24,7 +26,8 @@ func New(address string, options ...ConfigOption) *Client {
 	client := resty.
 		New().
 		SetTransport(config.transport).
-		SetBaseURL(config.address).
+		SetScheme(config.scheme).
+		SetBaseURL(strings.TrimRight(net.JoinHostPort(config.host, config.port), ":")).
 		SetHeader("Accept-Encoding", "gzip")
 
 	if config.compress {

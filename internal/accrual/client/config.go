@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -19,34 +20,47 @@ type config struct {
 	compress bool
 	retry    bool
 
-	address   string
 	transport http.RoundTripper
 }
 
 type ConfigOption func(*config)
 
 func newConfig(address string, options ...ConfigOption) *config {
-	host, port, err := net.SplitHostPort(address)
-	if err != nil {
-		host = address
-		port = "80"
-	}
-
 	config := &config{
-		scheme:            "http",
-		host:              host,
-		port:              port,
 		defaultRetryAfter: defaultRetryAfter,
 		compress:          true,
 		retry:             true,
 		transport:         http.DefaultTransport,
 	}
 
+	if strings.Contains(address, "://") {
+		url, err := url.Parse(address)
+		if err != nil {
+			panic(err)
+		}
+
+		host, port, err := net.SplitHostPort(url.Host)
+		if err != nil {
+			panic(err)
+		}
+
+		config.scheme = url.Scheme
+		config.host = host
+		config.port = port
+	} else {
+		host, port, err := net.SplitHostPort(address)
+		if err != nil {
+			config.host = address
+		} else {
+			config.scheme = "http"
+			config.host = host
+			config.port = port
+		}
+	}
+
 	for _, option := range options {
 		option(config)
 	}
-
-	config.address = fmt.Sprintf("%s://%s", config.scheme, strings.TrimRight(net.JoinHostPort(config.host, config.port), ":"))
 
 	return config
 }
