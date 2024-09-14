@@ -25,6 +25,7 @@ func newConfig(address string, options ...ConfigOption) *config {
 	config := &config{
 		baseURL: &url.URL{
 			Scheme: "http",
+			Host:   address,
 		},
 		defaultRetryAfter: defaultRetryAfter,
 		compress:          true,
@@ -32,26 +33,18 @@ func newConfig(address string, options ...ConfigOption) *config {
 		transport:         http.DefaultTransport,
 	}
 
-	resolveAddress(address, config)
+	if strings.Contains(address, "://") {
+		url, err := url.Parse(address)
+		if err == nil {
+			config.baseURL = url
+		}
+	}
 
 	for _, option := range options {
 		option(config)
 	}
 
 	return config
-}
-
-func resolveAddress(address string, config *config) {
-	if strings.Contains(address, "://") {
-		url, err := url.Parse(address)
-		if err != nil {
-			panic(err)
-		}
-
-		config.baseURL = url
-	} else {
-		config.baseURL.Host = address
-	}
 }
 
 func WithoutCompress() ConfigOption {
