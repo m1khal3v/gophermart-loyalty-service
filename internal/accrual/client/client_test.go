@@ -158,15 +158,8 @@ func (function roundTripFunction) RoundTrip(req *http.Request) (*http.Response, 
 
 func newTestClient(t *testing.T, function roundTripFunction) *Client {
 	t.Helper()
-	client, err := New(&Config{
-		DisableRetry:             true,
-		DisableAddressValidation: true,
-		transport:                function,
-	})
-	require.NoError(t, err)
-	require.NotNil(t, client)
 
-	return client
+	return New("test", WithoutRetry(), withTransport(function))
 }
 
 func createResponse(t *testing.T, statusCode int, response any) *http.Response {
