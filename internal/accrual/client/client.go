@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -22,12 +23,15 @@ type Client struct {
 
 func New(address string, options ...ConfigOption) *Client {
 	config := newConfig(address, options...)
+	baseURL := &url.URL{
+		Scheme: config.scheme,
+		Host:   strings.TrimRight(net.JoinHostPort(config.host, config.port), ":"),
+	}
 
 	client := resty.
 		New().
 		SetTransport(config.transport).
-		SetScheme(config.scheme).
-		SetBaseURL(strings.TrimRight(net.JoinHostPort(config.host, config.port), ":")).
+		SetBaseURL(baseURL.String()).
 		SetHeader("Accept-Encoding", "gzip")
 
 	if config.compress {
