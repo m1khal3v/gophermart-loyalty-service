@@ -1,16 +1,11 @@
 package client
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -20,95 +15,25 @@ import (
 	"github.com/m1khal3v/gophermart-loyalty-service/pkg/retry"
 )
 
-// This is a very simplified regular expression that will work in most cases.
-// In border cases, you can disable address verification through the config
-var addressRegex = regexp.MustCompile(`^https?://[a-zA-Z0-9][a-zA-Z0-9-.]*(:\d+)?(/[a-zA-Z0-9-_+%]*)*$`)
-
-const defaultRetryAfter = time.Second * 10
-
-type Config struct {
-	Address string
-
-	DisableCompress          bool
-	DisableAddressValidation bool
-	DisableRetry             bool
-
-	DefaultRetryAfter time.Duration
-
-	// for tests
-	transport http.RoundTripper
-}
-
 type Client struct {
 	resty  *resty.Client
-	config *Config
+	config *config
 }
 
-func New(config *Config) (*Client, error) {
-	if err := prepareConfig(config); err != nil {
-		return nil, err
-	}
+func New(address string, options ...ConfigOption) *Client {
+	config := newConfig(address, options...)
 
 	client := resty.
 		New().
 		SetTransport(config.transport).
-		SetBaseURL(config.Address).
+		SetBaseURL(config.address).
 		SetHeader("Accept-Encoding", "gzip")
 
-	if !config.DisableCompress {
+	if config.compress {
 		client.SetPreRequestHook(compressRequestBody)
 	}
 
-	return &Client{resty: client, config: config}, nil
-}
-
-func prepareConfig(config *Config) error {
-	if !config.DisableAddressValidation {
-		if !strings.HasPrefix(config.Address, "http") {
-			config.Address = "http://" + config.Address
-		}
-
-		if !addressRegex.MatchString(config.Address) {
-			return newErrInvalidAddress(config.Address)
-		}
-	}
-
-	if config.DefaultRetryAfter == 0 {
-		config.DefaultRetryAfter = defaultRetryAfter
-	}
-
-	if config.transport == nil {
-		config.transport = http.DefaultTransport
-	}
-
-	return nil
-}
-
-func compressRequestBody(client *resty.Client, request *http.Request) error {
-	if request.Body == nil {
-		return nil
-	}
-
-	buffer := bytes.NewBuffer([]byte{})
-	writer, err := gzip.NewWriterLevel(buffer, 5)
-	if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(writer, request.Body)
-	if err = errors.Join(err, writer.Close(), request.Body.Close()); err != nil {
-		return err
-	}
-
-	request.Body = io.NopCloser(buffer)
-	request.GetBody = func() (io.ReadCloser, error) {
-		return io.NopCloser(bytes.NewReader(buffer.Bytes())), nil
-	}
-	request.ContentLength = int64(buffer.Len())
-	request.Header.Set("Content-Encoding", "gzip")
-	request.Header.Set("Content-Length", fmt.Sprintf("%d", buffer.Len()))
-
-	return nil
+	return &Client{resty: client, config: config}
 }
 
 func (client *Client) Register(ctx context.Context, request *requests.Register) (*responses.Auth, *responses.APIError, error) {
@@ -257,7 +182,7 @@ func (client *Client) doRequest(request *resty.Request, method, url string) (*re
 		case status == http.StatusUnauthorized:
 			return ErrInvalidCredentials
 		case status == http.StatusTooManyRequests:
-			return newErrTooManyRequests(retryafter.Parse(result.Header().Get("Retry-After"), client.config.DefaultRetryAfter))
+			return newErrTooManyRequests(retryafter.Parse(result.Header().Get("Retry-After"), client.config.defaultRetryAfter))
 		case status == http.StatusInternalServerError:
 			return ErrInternalServerError
 		default:
@@ -266,7 +191,7 @@ func (client *Client) doRequest(request *resty.Request, method, url string) (*re
 	}
 
 	var err error
-	if !client.config.DisableRetry {
+	if client.config.retry {
 		err = retry.Retry(time.Second, 5*time.Second, 4, 2, do, func(err error) bool {
 			return !errors.As(err, &ErrUnexpectedStatus{}) &&
 				!errors.As(err, &ErrTooManyRequests{}) &&
