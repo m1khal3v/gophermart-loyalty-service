@@ -26,7 +26,7 @@ func New(address string, options ...ConfigOption) *Client {
 	client := resty.
 		New().
 		SetTransport(config.transport).
-		SetBaseURL(config.address).
+		SetBaseURL(config.baseURL.String()).
 		SetHeader("Accept-Encoding", "gzip")
 
 	if config.compress {

@@ -1,9 +1,8 @@
 package client
 
 import (
-	"fmt"
-	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -11,55 +10,47 @@ import (
 const defaultRetryAfter = time.Second * 10
 
 type config struct {
-	scheme            string
-	host              string
-	port              string
+	baseURL           *url.URL
 	defaultRetryAfter time.Duration
 
 	compress bool
 	retry    bool
 
-	address   string
 	transport http.RoundTripper
 }
 
 type ConfigOption func(*config)
 
 func newConfig(address string, options ...ConfigOption) *config {
-	host, port, err := net.SplitHostPort(address)
-	if err != nil {
-		host = address
-		port = "80"
-	}
-
 	config := &config{
-		scheme:            "http",
-		host:              host,
-		port:              port,
+		baseURL: &url.URL{
+			Scheme: "http",
+		},
 		defaultRetryAfter: defaultRetryAfter,
 		compress:          true,
 		retry:             true,
 		transport:         http.DefaultTransport,
 	}
 
+	resolveAddress(address, config)
+
 	for _, option := range options {
 		option(config)
 	}
 
-	config.address = fmt.Sprintf("%s://%s", config.scheme, strings.TrimRight(net.JoinHostPort(config.host, config.port), ":"))
-
 	return config
 }
 
-func WithScheme(scheme string) ConfigOption {
-	return func(config *config) {
-		config.scheme = scheme
-	}
-}
+func resolveAddress(address string, config *config) {
+	if strings.Contains(address, "://") {
+		url, err := url.Parse(address)
+		if err != nil {
+			panic(err)
+		}
 
-func WithPort(port uint32) ConfigOption {
-	return func(config *config) {
-		config.port = fmt.Sprintf("%d", port)
+		config.baseURL = url
+	} else {
+		config.baseURL.Host = address
 	}
 }
 
