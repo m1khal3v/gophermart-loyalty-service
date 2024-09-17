@@ -28,6 +28,9 @@ test: ## Run go test
 test-race: ## Run go race test
 	docker compose run --rm --no-deps service go test -v -race ./...
 
+test-cover: # Run coverage
+	docker compose run --rm --no-deps service bash -c "go test -v -coverpkg=./... -coverprofile=profile.cov ./... > /dev/null && go tool cover -func profile.cov"
+
 diff: ## Generate diff migration
 	docker compose -f atlas.yml build && \
 	docker compose -f atlas.yml run --rm atlas migrate hash --env gorm && \
