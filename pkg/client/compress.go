@@ -11,18 +11,17 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-func compressRequestBody(client *resty.Client, request *http.Request) error {
+func (client *Client) compressRequestBody(resty *resty.Client, request *http.Request) error {
 	if request.Body == nil {
 		return nil
 	}
 
 	buffer := bytes.NewBuffer([]byte{})
-	writer, err := gzip.NewWriterLevel(buffer, 5)
-	if err != nil {
-		return err
-	}
+	writer := client.gzipPool.Get().(*gzip.Writer)
+	defer client.gzipPool.Put(writer)
+	writer.Reset(buffer)
 
-	_, err = io.Copy(writer, request.Body)
+	_, err := io.Copy(writer, request.Body)
 	if err = errors.Join(err, writer.Close(), request.Body.Close()); err != nil {
 		return err
 	}

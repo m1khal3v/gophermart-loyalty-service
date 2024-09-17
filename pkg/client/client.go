@@ -1,11 +1,14 @@
 package client
 
 import (
+	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -16,24 +19,37 @@ import (
 )
 
 type Client struct {
-	resty  *resty.Client
-	config *config
+	gzipPool *sync.Pool
+	resty    *resty.Client
+	config   *config
 }
 
 func New(address string, options ...ConfigOption) *Client {
 	config := newConfig(address, options...)
-
-	client := resty.
-		New().
-		SetTransport(config.transport).
-		SetBaseURL(config.baseURL.String()).
-		SetHeader("Accept-Encoding", "gzip")
-
-	if config.compress {
-		client.SetPreRequestHook(compressRequestBody)
+	client := &Client{
+		resty: resty.
+			New().
+			SetTransport(config.transport).
+			SetBaseURL(config.baseURL.String()).
+			SetHeader("Accept-Encoding", "gzip"),
+		config: config,
 	}
 
-	return &Client{resty: client, config: config}
+	if config.compress {
+		client.gzipPool = &sync.Pool{
+			New: func() any {
+				writer, err := gzip.NewWriterLevel(io.Discard, 5)
+				if err != nil {
+					return nil
+				}
+
+				return writer
+			},
+		}
+		client.resty.SetPreRequestHook(client.compressRequestBody)
+	}
+
+	return client
 }
 
 func (client *Client) Register(ctx context.Context, request *requests.Register) (*responses.Auth, *responses.APIError, error) {
